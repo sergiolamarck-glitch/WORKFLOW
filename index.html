@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Visual - Mitigação de Erros</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React 18 e ReactDOM production CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone para transpilação JSX no navegador -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Google Fonts Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Estilização customizada da barra de rolagem */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Container raiz do React -->
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const CheckCircle2 = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    );
+
+    const AlertTriangle = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    );
+
+    const ShieldAlert = ({ className = "w-6 h-6" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    );
+
+    const ShieldCheck = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    );
+
+    const FileCheck = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <path d="m9 15 2 2 4-4"/>
+      </svg>
+    );
+
+    const Layers = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+        <polyline points="2 17 12 22 22 17"/>
+        <polyline points="2 12 12 17 22 12"/>
+      </svg>
+    );
+
+    const Tag = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z"/>
+        <line x1="7" y1="7" x2="7.01" y2="7"/>
+      </svg>
+    );
+
+    const Ruler = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0l12.6 12.6z"/>
+        <path d="m14.5 12.5 2-2"/>
+        <path d="m11.5 9.5 2-2"/>
+        <path d="m8.5 6.5 2-2"/>
+        <path d="m17.5 15.5 2-2"/>
+      </svg>
+    );
+
+    const Search = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    );
+
+    const ChevronRight = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    );
+
+    const Zap = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+    );
+
+    const Check = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    );
+
+    const ListFilter = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+    );
+
+    const FileText = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <line x1="10" y1="9" x2="8" y2="9"/>
+      </svg>
+    );
+
+    const Award = ({ className = "w-5 h-5" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="7"/>
+        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+      </svg>
+    );
+
+    const BookOpen = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+    );
+
+    const RotateCcw = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+      </svg>
+    );
+
+    const Sparkles = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/>
+      </svg>
+    );
+
+    const STAGES_DATA = [
+      {
+        id: 'sheet-prep',
+        number: '01',
+        title: 'Preparação de Folhas',
+        subtitle: 'Cortes, Escala, DMS & Organização Geral',
+        icon: Layers,
+        color: 'border-blue-500 bg-blue-500/10 text-blue-400',
+        badgeColor: 'bg-blue-500/20 text-blue-300',
+        fmeaItems: [
+          {
+            id: 'f1',
+            element: 'Identificação de Cortes no 3D',
+            failureMode: 'Corte sem indicação do número da folha ou letra correspondente.',
+            effect: 'Dificuldade extrema de localizar o detalhe no caderno de desenhos; atraso na fabricação.',
+            cause: 'Falta de checagem cruzada entre vista em planta, modelo 3D e vistos.',
+            severity: 8,
+            occurrence: 5,
+            detection: 4,
+            pokaYoke: 'Trava Visual: Exemplo Obrigatório "corte A, folha 0003". Validar cortes na planta e nos vistos.',
+            ruleText: 'Linkar cortes na planta e nos vistos com a numeração, letra e folha correspondente.'
+          },
+          {
+            id: 'f2',
+            element: 'Verificação de Escala e Orientação',
+            failureMode: 'Texto de cabeça para baixo ou símbolos em escala desproporcional.',
+            effect: 'Desenho ilegível no layout de fábrica, poluído ou com interpretação ambígua.',
+            cause: 'Não ajustar caixas de corte e textos para a escala indicativa do desenho.',
+            severity: 7,
+            occurrence: 6,
+            detection: 3,
+            pokaYoke: 'Mantra de Orientação: "Texto SEMPRE para cima". Elementos ajustados à escala do desenho.',
+            ruleText: 'Verificar escala indicativa na arte. Colocar caixa de corte, símbolos e textos na escala correta.'
+          },
+          {
+            id: 'f3',
+            element: 'DMS & Employer',
+            failureMode: 'Numeração desalinhada com a NOL ou não replicada no Layout.',
+            effect: 'Rastreabilidade incorreta no sistema ERP/DMS corporativo.',
+            cause: 'Alteração da paginação durante a edição sem sincronização do número no layout.',
+            severity: 8,
+            occurrence: 4,
+            detection: 3,
+            pokaYoke: 'Trava de Paginação: Troca de página força rechecagem obrigatória do NOL no Layout.',
+            ruleText: 'Colocar numeração de acordo com o NOL. Atualizar no layout conforme a numeração da página.'
+          },
+          {
+            id: 'f4',
+            element: 'Detalhes & Organização Final',
+            failureMode: 'Desconformidade com Normas ISO; Título, Escala e Paginação definidos precocemente.',
+            effect: 'Erros em cadeia na paginação final e não conformidade em auditorias ISO.',
+            cause: 'Definição precoce de índices antes da consolidação dos cortes.',
+            severity: 6,
+            occurrence: 4,
+            detection: 4,
+            pokaYoke: 'Regra da Sequência Final: Paginação e Escala deixadas estritamente para o FINAL (por X).',
+            ruleText: 'Detalhes devem seguir normas ISO. Numeração da folha correspondente. Título e nome corretos.'
+          }
+        ]
+      },
+      {
+        id: 'drawing-trace',
+        number: '02',
+        title: 'Traçado de Desenho',
+        subtitle: 'Roteamento de Barramentos & Flags HOLD',
+        icon: Ruler,
+        color: 'border-amber-500 bg-amber-500/10 text-amber-400',
+        badgeColor: 'bg-amber-500/20 text-amber-300',
+        fmeaItems: [
+          {
+            id: 'f5',
+            element: 'Especificação de Barramento Longo vs Comum',
+            failureMode: 'Uso de código incorreto (ex: usar 486 sem HOLD em barramento longo ou trocar E97 por E45).',
+            effect: 'Especificação incorreta de lista de materiais (BOM) e retrabalho na montagem.',
+            cause: 'Falta de consulta à matriz de decisão de barramentos durante o traçado.',
+            severity: 9,
+            occurrence: 4,
+            detection: 3,
+            pokaYoke: 'Matriz Condicional: Barramento Longo Standard ➜ USAR E97 | HVAC ➜ USAR E45 | Demais ➜ 486 com indicação HOLD.',
+            ruleText: 'Quando houver barramento longo USAR E97 (usar E45 quando HVAC). Se não houver, usar 486 com HOLD.'
+          }
+        ]
+      },
+      {
+        id: 'tables-data',
+        number: '03',
+        title: 'Tabela & Lista de Peças',
+        subtitle: 'Sequenciamento de Colunas e Simbologia',
+        icon: FileText,
+        color: 'border-purple-500 bg-purple-500/10 text-purple-400',
+        badgeColor: 'bg-purple-500/20 text-purple-300',
+        fmeaItems: [
+          {
+            id: 'f6',
+            element: 'Estrutura Sequencial de Tabelas',
+            failureMode: 'Inversão da ordem das colunas na tabela de cabos.',
+            effect: 'Erro de leitura do montador no chão de fábrica e inversão de conexões.',
+            cause: 'Preenchimento manual sem modelo padronizado.',
+            severity: 7,
+            occurrence: 5,
+            detection: 2,
+            pokaYoke: 'Sequência Rígida das Colunas: [1. Número] ➜ [2. PN] ➜ [3. Tipo de Cabo] ➜ [4. Quantidade].',
+            ruleText: 'Na tabela seguir sempre a ordem da linha: Número, PN, Tipo de Cabo, Quantidade, etc.'
+          },
+          {
+            id: 'f7',
+            element: 'Organização de Elementos Gráficos',
+            failureMode: 'Símbolo do LUG ou do EA desorganizado, sobreposto ou desalinhado.',
+            effect: 'Confusão visual na identificação dos terminais e das anilhas de aterramento.',
+            cause: 'Agrupamento e alinhamento inadequado de símbolos no CAD.',
+            severity: 6,
+            occurrence: 4,
+            detection: 3,
+            pokaYoke: 'Alinhamento Simbólico: Organizar visualmente quadrado, círculo, símbolo EA e símbolo LUG sem sobreposição.',
+            ruleText: 'Organizar sempre cada elemento (quadrado e círculo, símbolo do EA, símbolo do LUG).'
+          }
+        ]
+      },
+      {
+        id: 'tagging-cables',
+        number: '04',
+        title: 'TAGs & Cabeamento',
+        subtitle: 'Hierarquia de Tags & Medição de LUGs',
+        icon: Tag,
+        color: 'border-emerald-500 bg-emerald-500/10 text-emerald-400',
+        badgeColor: 'bg-emerald-500/20 text-emerald-300',
+        fmeaItems: [
+          {
+            id: 'f8',
+            element: 'Ordem Prioritária de TAGs',
+            failureMode: 'Aplicação de Tags de cabos fora da ordem hierárquica (1 a 4).',
+            effect: 'Desorganização na identificação e lentidão na manutenção e testes de continuidade.',
+            cause: 'Identificação aleatória de jumpers ou derivações antes da malha principal.',
+            severity: 9,
+            occurrence: 5,
+            detection: 3,
+            pokaYoke: 'Hierarquia Inviolável (1 a 4): 1º Aterramentos ➔ 2º Jumpers ➔ 3º Derivações ➔ 4º MAIN Cable.',
+            ruleText: 'Seguir estritamente a ordem de TAGs (1 a 4). Fazer a contagem e medição exata de cabos e LUGs.'
+          },
+          {
+            id: 'f9',
+            element: 'Contagem e Medição de LUGs',
+            failureMode: 'Divergência entre a quantidade de LUGs indicados no desenho e na tabela.',
+            effect: 'Falta de terminais no kit de montagem gerando parada na linha de produção.',
+            cause: 'Omissão de medição individual nos barramentos secundários.',
+            severity: 8,
+            occurrence: 5,
+            detection: 3,
+            pokaYoke: 'Dupla Contagem de LUGs: Medir e contar cada LUG individualmente antes da liberação.',
+            ruleText: 'Fazer contagem e medição detalhada de cabos e LUGs em todos os pontos.'
+          }
+        ]
+      },
+      {
+        id: 'grounding-busbar',
+        number: '05',
+        title: 'Aterramento & Busbar',
+        subtitle: 'Sistemas INS/TELE & Terminal 697 (AZAXX)',
+        icon: Zap,
+        color: 'border-rose-500 bg-rose-500/10 text-rose-400',
+        badgeColor: 'bg-rose-500/20 text-rose-300',
+        fmeaItems: [
+          {
+            id: 'f10',
+            element: 'Aterramento INS / TELE & Terminal 697',
+            failureMode: 'Incompatibilidade de sufixos (ex: E54X-02 / E54X-D1/02) na Tabela AZAXX do Busbar 697.',
+            effect: 'Falha de aterramento de instrumentos/telecom, gerando ruído e risco elétrico.',
+            cause: 'Inobservância do De-Para de códigos para o terminal 697 e derivações.',
+            severity: 9,
+            occurrence: 3,
+            detection: 4,
+            pokaYoke: 'Tabela Padrão AZAXX para Terminal 697: Mapeamento direto de Busbar A ➜ E54X-02/1 e sufixos padronizados.',
+            ruleText: 'Para terminal 697 a tabela fica AZAXX. Conferir códigos E54X-02, E54X-D1/02 e medições do Busbar.'
+          }
+        ]
+      }
+    ];
+
+    const GROUNDING_REF_TABLE = [
+      { item: 'Conexão 604', codigo: 'E54X-02', tipo: 'Aterramento Direto' },
+      { item: 'Conexão 609', codigo: 'E54X-02', tipo: 'Aterramento Direto' },
+      { item: 'Conexão 6108', codigo: 'E54X-D1/02', tipo: 'Derivação Especial' },
+      { item: 'Bandejas E01 / E02 / E10', codigo: 'E54X-D1/02', tipo: 'Derivação de Bandeja' },
+      { item: 'Aterramento Main (655-05 / E54A-01/02)', codigo: '655-D3', tipo: 'Aterramento Principal' },
+      { item: 'Terminal 697 (Busbar A)', codigo: 'E54X-02/1 (Tabela AZAXX)', tipo: 'Aterramento Barramento 697' }
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = React.useState('workflow');
+      const [selectedStage, setSelectedStage] = React.useState(STAGES_DATA[0].id);
+      const [searchTerm, setSearchTerm] = React.useState('');
+      const [minRpnFilter, setMinRpnFilter] = React.useState(0);
+      
+      const [checkedItems, setCheckedItems] = React.useState({});
+      const [busbarType, setBusbarType] = React.useState('long-standard');
+
+      const allChecklistItems = React.useMemo(() => {
+        const list = [];
+        STAGES_DATA.forEach(stage => {
+          stage.fmeaItems.forEach(item => {
+            list.push({
+              id: item.id,
+              stageId: stage.id,
+              stageTitle: stage.title,
+              element: item.element,
+              ruleText: item.ruleText,
+              pokaYoke: item.pokaYoke,
+              rpn: item.severity * item.occurrence * item.detection
+            });
+          });
+        });
+        return list;
+      }, []);
+
+      const toggleCheck = (id) => {
+        setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
+      };
+
+      const completedCount = React.useMemo(() => {
+        return Object.values(checkedItems).filter(Boolean).length;
+      }, [checkedItems]);
+
+      const progressPercentage = Math.round((completedCount / allChecklistItems.length) * 100);
+
+      const filteredFmeaItems = React.useMemo(() => {
+        return STAGES_DATA.flatMap(stage => 
+          stage.fmeaItems.map(item => ({
+            ...item,
+            stageTitle: stage.title,
+            stageNumber: stage.number,
+            rpn: item.severity * item.occurrence * item.detection
+          }))
+        ).filter(item => {
+          const matchesSearch = item.element.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                item.failureMode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                item.pokaYoke.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchesRpn = item.rpn >= minRpnFilter;
+          return matchesSearch && matchesRpn;
+        });
+      }, [searchTerm, minRpnFilter]);
+
+      const currentStageObj = STAGES_DATA.find(s => s.id === selectedStage);
+
+      const getBusbarDecision = (type) => {
+        switch (type) {
+          case 'long-standard':
+            return { code: 'E97', text: 'Usar Obrigatoriamente Categoria E97', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' };
+          case 'long-hvac':
+            return { code: 'E45', text: 'Usar Categoria E45 (Aplicação HVAC)', badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' };
+          case 'short':
+            return { code: '486 + HOLD', text: 'Usar Código 486 acompanhado do Flag de Sinalização HOLD', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40' };
+          default:
+            return { code: 'INDEFINIDO', text: 'Selecione um tipo de barramento', badge: 'bg-slate-800 text-slate-400' };
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+          
+          {/* HEADER DE COMANDO */}
+          <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/40 rounded-xl text-indigo-400">
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      ISO 9001 & Quality Engineering
+                    </span>
+                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <BookOpen className="w-3 h-3" /> Baseado no PDF: Workflow.pdf
+                    </span>
+                  </div>
+                  <h1 className="text-xl font-bold text-white tracking-tight">
+                    Workflow Visual para Mitigação de Erros
+                  </h1>
+                </div>
+              </div>
+
+              {/* INDICADORES RÁPIDOS DE QUALIDADE */}
+              <div className="flex items-center gap-3 self-end md:self-auto">
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl px-3.5 py-1.5 text-right">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">Status da Liberação</span>
+                  <span className={`text-xs font-bold flex items-center justify-end gap-1.5 ${progressPercentage === 100 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {progressPercentage === 100 ? <CheckCircle2 className="w-4 h-4" /> : <RotateCcw className="w-3.5 h-3.5 animate-spin text-amber-400" />}
+                    {progressPercentage}% Conformidade
+                  </span>
+                </div>
+                
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl px-3.5 py-1.5 text-right">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">Trava Zero Defeito</span>
+                  <span className="text-xs font-bold text-indigo-400">
+                    {completedCount} / {allChecklistItems.length} Verificados
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* NAVEGAÇÃO DE ABAS */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 border-t border-slate-800/60 pt-2 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('workflow')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all ${
+                  activeTab === 'workflow'
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/10 rounded-t-lg'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                Workflow Visual (Pipeline)
+              </button>
+
+              <button
+                onClick={() => setActiveTab('poka-yoke')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all ${
+                  activeTab === 'poka-yoke'
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/10 rounded-t-lg'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                Assistentes Poka-Yoke Interativos
+              </button>
+
+              <button
+                onClick={() => setActiveTab('fmea')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all ${
+                  activeTab === 'fmea'
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/10 rounded-t-lg'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                }`}
+              >
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                Matriz FMEA & Risco (RPN)
+              </button>
+
+              <button
+                onClick={() => setActiveTab('checklist')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all ${
+                  activeTab === 'checklist'
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/10 rounded-t-lg'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                }`}
+              >
+                <FileCheck className="w-4 h-4 text-cyan-400" />
+                Checklist de Inspeção
+              </button>
+
+              <button
+                onClick={() => setActiveTab('rules')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all ${
+                  activeTab === 'rules'
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/10 rounded-t-lg'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                }`}
+              >
+                <Award className="w-4 h-4 text-rose-400" />
+                Guia Rápido & De-Para PDF
+              </button>
+            </div>
+          </header>
+
+          {}
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            {/* ABA WORKFLOW PIPELINE */}
+            {activeTab === 'workflow' && (
+              <div className="space-y-8">
+                
+                <div className="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+                  <div className="absolute right-0 bottom-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+                  <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 relative z-10">
+                    <div>
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-indigo-400" />
+                        Fluxo Sequencial de Elaboração Zero-Defeitos
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                        Navegue pelos nós do pipeline abaixo para visualizar as diretrizes operacionais extraídas do manuscrito e suas respectivas travas de qualidade de cada fase de execução.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-300 bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-800">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Garantia de Qualidade ISO Ativa
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  {STAGES_DATA.map((stage) => {
+                    const IconComp = stage.icon;
+                    const isSelected = selectedStage === stage.id;
+                    const stageChecklist = allChecklistItems.filter(i => i.stageId === stage.id);
+                    const stageCompleted = stageChecklist.every(i => checkedItems[i.id]);
+
+                    return (
+                      <button
+                        key={stage.id}
+                        onClick={() => setSelectedStage(stage.id)}
+                        className={`relative text-left p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between h-36 ${
+                          isSelected
+                            ? `${stage.color} ring-2 ring-indigo-500/50 shadow-xl shadow-indigo-500/10 scale-[1.02]`
+                            : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/90'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${stage.badgeColor}`}>
+                            ETAPA {stage.number}
+                          </span>
+                          {stageCompleted ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                          ) : (
+                            <IconComp className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                          )}
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold text-sm text-white line-clamp-1">{stage.title}</h3>
+                          <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">{stage.subtitle}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] pt-2 border-t border-slate-800/60 text-slate-400">
+                          <span>{stage.fmeaItems.length} Controles</span>
+                          <span className="flex items-center text-indigo-400 font-semibold">
+                            Inspecionar <ChevronRight className="w-3 h-3 ml-0.5" />
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {currentStageObj && (
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-3 rounded-xl ${currentStageObj.color}`}>
+                          <currentStageObj.icon className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-mono text-indigo-400 uppercase font-semibold">
+                            Detalhamento Técnico da Etapa {currentStageObj.number}
+                          </span>
+                          <h3 className="text-xl font-bold text-white">{currentStageObj.title}</h3>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-slate-400 bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800">
+                        <span className="text-slate-200 font-bold">{currentStageObj.fmeaItems.length} Modos de Falha</span> Mapeados no PDF
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {currentStageObj.fmeaItems.map((item) => {
+                        const isChecked = !!checkedItems[item.id];
+                        const rpn = item.severity * item.occurrence * item.detection;
+
+                        return (
+                          <div 
+                            key={item.id}
+                            className={`p-5 rounded-xl border transition-all ${
+                              isChecked 
+                                ? 'bg-emerald-950/20 border-emerald-500/40' 
+                                : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-2.5">
+                                <button
+                                  onClick={() => toggleCheck(item.id)}
+                                  className={`p-1.5 rounded-lg border transition-all ${
+                                    isChecked
+                                      ? 'bg-emerald-500 border-emerald-400 text-slate-950'
+                                      : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'
+                                  }`}
+                                  title={isChecked ? "Marcar como pendente" : "Marcar como verificado"}
+                                >
+                                  <Check className="w-4 h-4 stroke-[3]" />
+                                </button>
+                                <h4 className="font-bold text-slate-100 text-sm">{item.element}</h4>
+                              </div>
+
+                              <span className={`text-xs font-mono px-2.5 py-0.5 rounded border font-semibold ${
+                                rpn > 120 
+                                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
+                                  : rpn > 80 
+                                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
+                                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                              }`}>
+                                RPN {rpn}
+                              </span>
+                            </div>
+
+                            <div className="mt-4 p-3 bg-slate-900/90 rounded-lg border border-slate-800">
+                              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1 flex items-center gap-1">
+                                <FileText className="w-3 h-3 text-indigo-400" /> Diretriz do Manuscrito (PDF)
+                              </span>
+                              <p className="text-xs text-slate-200 font-mono leading-relaxed">{item.ruleText}</p>
+                            </div>
+
+                            <div className="mt-3 space-y-2">
+                              <div className="flex items-start gap-2 text-xs text-amber-400/90 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <div>
+                                  <strong className="font-semibold block text-amber-300">Modo de Falha Potencial:</strong>
+                                  {item.failureMode}
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-2 text-xs text-emerald-400 bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
+                                <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
+                                <div>
+                                  <strong className="font-semibold block text-emerald-300">Trava Poka-Yoke (Prevenção):</strong>
+                                  {item.pokaYoke}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {}
+            {activeTab === 'poka-yoke' && (
+              <div className="space-y-8">
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-emerald-400" />
+                    Assistentes de Decisão & Travas Poka-Yoke Interativas
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Utilize os simuladores abaixo para validar regras automáticas antes do traçado no CAD e inserção na tabela.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* ASSISTENTE 1: DECISOR DE BARRAMENTOS */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+                    <div className="flex items-center space-x-3 border-b border-slate-800 pb-4">
+                      <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl">
+                        <Ruler className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white text-base">Decisor de Código de Barramento</h3>
+                        <p className="text-xs text-slate-400">Regra de Seleção: Barramento Longo / HVAC / Convencional</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-xs font-semibold text-slate-300 block">
+                        Selecione a característica da linha/barramento:
+                      </label>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <button
+                          onClick={() => setBusbarType('long-standard')}
+                          className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                            busbarType === 'long-standard'
+                              ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          Barramento Longo (Standard)
+                        </button>
+
+                        <button
+                          onClick={() => setBusbarType('long-hvac')}
+                          className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                            busbarType === 'long-hvac'
+                              ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          Barramento Longo (HVAC)
+                        </button>
+
+                        <button
+                          onClick={() => setBusbarType('short')}
+                          className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                            busbarType === 'short'
+                              ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300 font-bold'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          Barramento Convencional
+                        </button>
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const decision = getBusbarDecision(busbarType);
+                      return (
+                        <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">
+                            Resultado Poka-Yoke Calculado
+                          </span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-300">{decision.text}</span>
+                            <span className={`px-3 py-1 rounded-lg border font-mono font-bold text-sm ${decision.badge}`}>
+                              {decision.code}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* ASSISTENTE 2: HIERARQUIA DE TAGS (1 A 4) */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+                    <div className="flex items-center space-x-3 border-b border-slate-800 pb-4">
+                      <div className="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl">
+                        <Tag className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white text-base">Validador Sequencial de TAGs (1 a 4)</h3>
+                        <p className="text-xs text-slate-400">Verificação da hierarquia prioritária exigida no PDF</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {[
+                        { priority: '1º', title: 'Aterramentos', rule: 'Prioridade Absoluta' },
+                        { priority: '2º', title: 'Jumpers', rule: 'Segunda Sequência' },
+                        { priority: '3º', title: 'Derivações', rule: 'Terceira Sequência' },
+                        { priority: '4º', title: 'MAIN Cable', rule: 'Quarta Sequência' }
+                      ].map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-950 border border-slate-800 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <span className="w-7 h-7 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-mono font-bold text-xs rounded-lg flex items-center justify-center">
+                              {item.priority}
+                            </span>
+                            <span className="text-xs font-bold text-slate-200">{item.title}</span>
+                          </div>
+                          <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                            {item.rule}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {}
+            {activeTab === 'fmea' && (
+              <div className="space-y-6">
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                  <div>
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-400" />
+                      Matriz FMEA (Failure Mode and Effects Analysis)
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Cálculo do Número de Prioridade de Risco: <strong className="text-slate-200">RPN = Severidade (S) × Ocorrência (O) × Detecção (D)</strong>
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input
+                        type="text"
+                        placeholder="Buscar falha, causa ou elemento..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-56"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-400">
+                      <ListFilter className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Filtrar RPN:</span>
+                      <select 
+                        value={minRpnFilter} 
+                        onChange={(e) => setMinRpnFilter(Number(e.target.value))}
+                        className="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer"
+                      >
+                        <option value={0} className="bg-slate-900">Todos</option>
+                        <option value={80} className="bg-slate-900">&gt; 80 (Médio)</option>
+                        <option value={120} className="bg-slate-900">&gt; 120 (Crítico)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]">
+                        <tr>
+                          <th className="p-4">Etapa / Elemento</th>
+                          <th className="p-4">Modo de Falha Potencial</th>
+                          <th className="p-4">Efeito / Causa Raiz</th>
+                          <th className="p-4 text-center">S</th>
+                          <th className="p-4 text-center">O</th>
+                          <th className="p-4 text-center">D</th>
+                          <th className="p-4 text-center">RPN</th>
+                          <th className="p-4">Mecanismo Poka-Yoke Recomendado</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                        {filteredFmeaItems.map((item) => (
+                          <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                            <td className="p-4">
+                              <span className="text-[10px] text-indigo-400 font-mono block">
+                                ETAPA {item.stageNumber} • {item.stageTitle}
+                              </span>
+                              <strong className="text-xs font-semibold text-white">{item.element}</strong>
+                            </td>
+
+                            <td className="p-4 max-w-xs font-mono text-amber-300/90 text-[11px]">
+                              {item.failureMode}
+                            </td>
+
+                            <td className="p-4 max-w-xs text-slate-400 text-[11px]">
+                              <div><strong className="text-slate-300">Efeito:</strong> {item.effect}</div>
+                              <div className="mt-1"><strong className="text-slate-300">Causa:</strong> {item.cause}</div>
+                            </td>
+
+                            <td className="p-4 text-center font-mono font-bold text-slate-200">{item.severity}</td>
+                            <td className="p-4 text-center font-mono font-bold text-slate-200">{item.occurrence}</td>
+                            <td className="p-4 text-center font-mono font-bold text-slate-200">{item.detection}</td>
+
+                            <td className="p-4 text-center">
+                              <span className={`px-2.5 py-1 rounded font-mono font-bold text-xs ${
+                                item.rpn > 120 
+                                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' 
+                                  : item.rpn > 80 
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              }`}>
+                                {item.rpn}
+                              </span>
+                            </td>
+
+                            <td className="p-4 max-w-xs">
+                              <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-emerald-400 text-[11px] font-mono leading-relaxed">
+                                {item.pokaYoke}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {}
+            {activeTab === 'checklist' && (
+              <div className="space-y-6">
+                
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <FileCheck className="w-5 h-5 text-cyan-400" />
+                        Checklist de Auditoria Zero-Defeito
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Verifique individualmente cada diretriz antes da liberação e emissão do desenho.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setCheckedItems({})}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl border border-slate-700 transition-colors"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Resetar Auditoria
+                    </button>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-400">Progresso de Verificação</span>
+                      <span className="text-emerald-400">{completedCount} de {allChecklistItems.length} Verificados ({progressPercentage}%)</span>
+                    </div>
+                    <div className="w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                      <div 
+                        className="bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${progressPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {STAGES_DATA.map((stage) => {
+                    const stageItems = allChecklistItems.filter(i => i.stageId === stage.id);
+                    const stageCheckedCount = stageItems.filter(i => checkedItems[i.id]).length;
+
+                    return (
+                      <div key={stage.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                        <div className="bg-slate-950/80 px-6 py-3.5 border-b border-slate-800 flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${stage.badgeColor}`}>
+                              ETAPA {stage.number}
+                            </span>
+                            <h3 className="font-bold text-white text-sm">{stage.title}</h3>
+                          </div>
+                          <span className="text-xs text-slate-400 font-mono">
+                            {stageCheckedCount} / {stageItems.length} Verificados
+                          </span>
+                        </div>
+
+                        <div className="divide-y divide-slate-800/60 p-2">
+                          {stageItems.map((item) => {
+                            const isChecked = !!checkedItems[item.id];
+                            return (
+                              <div 
+                                key={item.id}
+                                onClick={() => toggleCheck(item.id)}
+                                className={`p-4 rounded-xl flex items-start gap-4 cursor-pointer transition-all ${
+                                  isChecked 
+                                    ? 'bg-emerald-950/20 text-slate-200' 
+                                    : 'hover:bg-slate-800/40 text-slate-300'
+                                }`}
+                              >
+                                <div className={`mt-0.5 p-1 rounded-md border transition-all ${
+                                  isChecked 
+                                    ? 'bg-emerald-500 border-emerald-400 text-slate-950' 
+                                    : 'bg-slate-950 border-slate-700 text-transparent'
+                                }`}>
+                                  <Check className="w-4 h-4 stroke-[3]" />
+                                </div>
+
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-bold text-sm text-slate-100">{item.element}</span>
+                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                                      RPN {item.rpn}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-300 font-mono bg-slate-950/60 p-2 rounded-lg border border-slate-800">
+                                    {item.ruleText}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {}
+            {activeTab === 'rules' && (
+              <div className="space-y-6">
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Award className="w-5 h-5 text-rose-400" />
+                    Símbolos e Tabela de Aterramento INS/TELE (PDF De-Para)
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Consulta rápida dos códigos de aterramento e terminal 697 mapeados na folha manuscrita.
+                  </p>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                  <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-rose-400" /> Mapeamento de Códigos INS/TELE
+                    </span>
+                    <span className="text-xs font-mono text-indigo-400">Tabela AZAXX (Terminal 697)</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]">
+                        <tr>
+                          <th className="p-4">Elemento / Conexão</th>
+                          <th className="p-4">Código / Sufixo Técnico</th>
+                          <th className="p-4">Tipo de Aplicação</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 text-slate-300 font-mono">
+                        {GROUNDING_REF_TABLE.map((row, index) => (
+                          <tr key={index} className="hover:bg-slate-800/30 transition-colors">
+                            <td className="p-4 font-bold text-slate-200">{row.item}</td>
+                            <td className="p-4 text-rose-400 font-bold">{row.codigo}</td>
+                            <td className="p-4 text-slate-400 text-xs font-sans">{row.tipo}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {}
+          <footer className="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+            <p>Workflow Visual Interativo para Mitigação de Erros • Engenharia de Qualidade & Detalhamento Técnico ISO</p>
+          </footer>
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
