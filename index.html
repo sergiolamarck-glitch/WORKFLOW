@@ -5,936 +5,1273 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Workflow Mitigação de Erros - Quality Control</title>
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- React & ReactDOM CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
-  <!-- Babel Standalone for JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <!-- Google Fonts: Plus Jakarta Sans (Apple/Pixel Feel) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            pixel: {
-              blue: '#1a73e8',
-              lightBlue: '#e8f0fe',
-              green: '#34a853',
-              lightGreen: '#e6f4ea',
-              yellow: '#fbbc04',
-              lightYellow: '#fef7e0',
-              red: '#ea4335',
-              lightRed: '#fce8e6',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
+    /* RESET & BASE - ESTILO APPLE & GOOGLE PIXEL */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
       background-color: #f8fafc;
       color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      padding-bottom: 2rem;
     }
-    .glass-nav {
-      background: rgba(255, 255, 255, 0.85);
+
+    /* HEADER & GLASSMORPHISM */
+    .glass-header {
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px border-slate-200;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
+    .header-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1a73e8, #4285f4);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25);
+    }
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+    .brand-sub {
+      font-size: 0.725rem;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .badge-iso {
+      background-color: #e8f0fe;
+      color: #1a73e8;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+
+    /* STATUS COUNTER */
+    .status-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 0.4rem 0.85rem;
+      text-align: right;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .status-label {
+      font-size: 0.65rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-weight: 700;
+      display: block;
+    }
+    .status-val {
+      font-size: 0.825rem;
+      font-weight: 800;
+      color: #1a73e8;
+    }
+    .status-val.complete {
+      color: #10b981;
+    }
+
+    /* NAVIGATION TABS */
+    .tabs-nav {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.25rem 1rem 0;
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      border-top: 1px solid #f1f5f9;
+    }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      padding: 0.55rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #64748b;
+      border-radius: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .nav-btn.active {
+      background: #1a73e8;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(26, 115, 232, 0.2);
+    }
+
+    /* MAIN CONTAINER */
+    .main-container {
+      max-width: 1100px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+
+    /* STAGE PIPELINE BUTTONS */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (min-width: 640px) {
+      .pipeline-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+    .stage-btn {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 0.85rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100px;
+      position: relative;
+    }
+    .stage-btn:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+    .stage-btn.active {
+      background: #ffffff;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15), 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stage-num-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      display: inline-block;
+      width: fit-content;
+    }
+    .stage-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 0.4rem;
+      line-height: 1.2;
+    }
+    .stage-sub {
+      font-size: 0.675rem;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0.15rem;
+    }
+    .stage-check {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      color: #10b981;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    /* CARD CONTAINER */
+    .content-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      margin-bottom: 1.5rem;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .card-subtitle {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    /* VISUAL GUIDE BOXES */
+    .visual-guide-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .visual-guide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .visual-guide-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .visual-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .visual-grid-2 { grid-template-columns: repeat(2, 1fr); }
+      .visual-grid-3 { grid-template-columns: repeat(3, 1fr); }
+      .visual-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .demo-interactive-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* BUTTONS & CONTROLS */
+    .btn-action {
+      background: #1a73e8;
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover {
+      background: #1557b0;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    /* RULES GRID */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 768px) {
+      .rules-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .rule-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 1.15rem;
+      transition: all 0.2s ease;
+    }
+    .rule-card.checked {
+      background: #f0fdf4;
+      border-color: #a7f3d0;
+    }
+    .rule-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .checkbox-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      border: 2px solid #cbd5e1;
+      background: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: transparent;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .rule-card.checked .checkbox-btn {
+      background: #10b981;
+      border-color: #10b981;
+      color: #ffffff;
+    }
+    .rule-element-title {
+      font-size: 0.875rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .rpn-tag {
+      font-family: monospace;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .rpn-tag.high {
+      background: #ffe4e6;
+      color: #e11d48;
+    }
+
+    .rule-box-original {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.775rem;
+      color: #334155;
+    }
+    .rule-box-poka {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #065f46;
+    }
+
+    /* TABLES */
+    .custom-table-wrapper {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.775rem;
+    }
+    .custom-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.675rem;
+    }
+    .custom-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+    .custom-table tr:hover td {
+      background: #f8fafc;
+    }
+
+    /* UTILITY CLASSES */
+    .mono { font-family: monospace; font-weight: 700; }
+    .text-emerald { color: #10b981; }
+    .text-blue { color: #1a73e8; }
+    .text-amber { color: #d97706; }
+    .text-rose { color: #e11d48; }
+
+    .bg-blue-badge { background: #e8f0fe; color: #1a73e8; }
+    .bg-amber-badge { background: #fef3c7; color: #b45309; }
+    .bg-purple-badge { background: #f3e8ff; color: #6b21a8; }
+    .bg-emerald-badge { background: #d1fae5; color: #047857; }
+    .bg-rose-badge { background: #ffe4e6; color: #be123c; }
+
+    /* ROTATE SIMULATOR */
+    .rotate-box {
+      transition: transform 0.3s ease;
+      background: #ffffff;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.75rem;
+    }
+    .rotate-box.flipped {
+      transform: rotate(180deg);
+      background: #fff1f2;
+      border-color: #fda4af;
+      color: #e11d48;
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-  <div id="root"></div>
+  <!-- HEADER -->
+  <header class="glass-header">
+    <div class="header-container">
+      <div class="brand-box">
+        <div class="brand-icon">✓</div>
+        <div>
+          <div class="brand-sub">
+            <span class="badge-iso">ISO & BA11 Standard</span>
+            <span>Workflow Mitigação de Erros</span>
+          </div>
+          <h1 class="brand-title">Controle de Qualidade em Projetos & Desenhos</h1>
+        </div>
+      </div>
 
-  <script type="text/babel">
-    const { useState, useMemo, useEffect } = React;
+      <div class="status-card">
+        <span class="status-label">Status da Inspeção</span>
+        <span id="statusCounter" class="status-val">0 de 13 (0%)</span>
+      </div>
+    </div>
 
-    // --- ÍCONES VETORIAIS (SVG) ESTILO APPLE/PIXEL ---
-    const IconShield = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-    );
-    const IconCheck = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-    );
-    const IconAlert = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-    );
-    const IconLayers = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-    );
-    const IconRuler = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m-1 4h1m5-12h1m-1 4h1m-1 4h1m-1 4h1"/></svg>
-    );
-    const IconTag = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a1 1 0 01.707.293l7 7a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-7-7A1 1 0 013 8V4a1 1 0 011-1z"/></svg>
-    );
-    const IconTable = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-    );
-    const IconZap = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-    );
-    const IconSparkles = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-    );
-    const IconSearch = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    );
-    const IconRefresh = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-    );
-    const IconEye = ({ className = "w-5 h-5" }) => (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-    );
+    <nav class="tabs-nav">
+      <button class="nav-btn active" onclick="switchTab('workflow')">Workflow & Guias Visuais</button>
+      <button class="nav-btn" onclick="switchTab('fmea')">Matriz FMEA de Riscos</button>
+      <button class="nav-btn" onclick="switchTab('checklist')">Checklist Digital</button>
+      <button class="nav-btn" onclick="switchTab('depara')">Tabela De-Para Norma BA11</button>
+    </nav>
+  </header>
 
-    // --- DADOS CONSOLIDADOS DO MANUSCRITO PDF ---
-    const STAGES_DATA = [
-      {
-        id: 'sheet-prep',
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- TAB 1: WORKFLOW & GUIAS -->
+    <div id="tab-workflow">
+      
+      <!-- PIPELINE SELEÇÃO DE ETAPAS -->
+      <div class="pipeline-grid">
+        <button class="stage-btn active" onclick="selectStage('sheet-prep')" id="btn-sheet-prep">
+          <div>
+            <span class="stage-num-badge bg-blue-badge">ETAPA 01</span>
+            <div class="stage-title">Preparação de Folhas</div>
+            <div class="stage-sub">Cortes 3D, Orientação & NOL</div>
+          </div>
+          <span class="stage-check" id="check-sheet-prep"></span>
+        </button>
+
+        <button class="stage-btn" onclick="selectStage('drawing-trace')" id="btn-drawing-trace">
+          <div>
+            <span class="stage-num-badge bg-amber-badge">ETAPA 02</span>
+            <div class="stage-title">Traçado de Desenho</div>
+            <div class="stage-sub">Barramentos & Suportes</div>
+          </div>
+          <span class="stage-check" id="check-drawing-trace"></span>
+        </button>
+
+        <button class="stage-btn" onclick="selectStage('tables-data')" id="btn-tables-data">
+          <div>
+            <span class="stage-num-badge bg-purple-badge">ETAPA 03</span>
+            <div class="stage-title">Tabela & Simbologia</div>
+            <div class="stage-sub">Sequência, LUGs & Termo</div>
+          </div>
+          <span class="stage-check" id="check-tables-data"></span>
+        </button>
+
+        <button class="stage-btn" onclick="selectStage('tagging-cables')" id="btn-tagging-cables">
+          <div>
+            <span class="stage-num-badge bg-emerald-badge">ETAPA 04</span>
+            <div class="stage-title">TAGs & Cabeamento</div>
+            <div class="stage-sub">Hierarquia 1 a 4 & Destino</div>
+          </div>
+          <span class="stage-check" id="check-tagging-cables"></span>
+        </button>
+
+        <button class="stage-btn" onclick="selectStage('grounding-busbar')" id="btn-grounding-busbar">
+          <div>
+            <span class="stage-num-badge bg-rose-badge">ETAPA 05</span>
+            <div class="stage-title">Aterramento 697</div>
+            <div class="stage-sub">Tabela AZAXX & Torque</div>
+          </div>
+          <span class="stage-check" id="check-grounding-busbar"></span>
+        </button>
+      </div>
+
+      <!-- CONTAINER DA ETAPA ATIVA -->
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <span id="stageHeaderNumber" class="badge-iso">ETAPA 01</span>
+            <h2 id="stageHeaderTitle" class="card-title">Preparação de Folhas</h2>
+          </div>
+          <span id="stageRuleCount" class="card-subtitle">4 Regras de Controle</span>
+        </div>
+
+        <!-- AREA DE GUIAS VISUAIS DINÂMICOS -->
+        <div id="visualGuideContainer"></div>
+
+        <!-- LISTA DE REGRAS POKA-YOKE -->
+        <div id="stageRulesGrid" class="rules-grid"></div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: MATRIZ FMEA -->
+    <div id="tab-fmea" class="hidden">
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Matriz FMEA (Failure Mode and Effects Analysis)</h2>
+            <div class="card-subtitle">Análise Preventiva: RPN = Severidade (S) × Ocorrência (O) × Detecção (D)</div>
+          </div>
+          <input type="text" id="fmeaSearch" placeholder="Buscar regra ou falha..." oninput="renderFMEA()" style="padding: 0.4rem 0.75rem; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.75rem; width: 220px;" />
+        </div>
+
+        <div class="custom-table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Etapa / Elemento</th>
+                <th>Modo de Falha Potencial</th>
+                <th style="text-align: center;">S</th>
+                <th style="text-align: center;">O</th>
+                <th style="text-align: center;">D</th>
+                <th style="text-align: center;">RPN</th>
+                <th>Trava Poka-Yoke Recomendada</th>
+              </tr>
+            </thead>
+            <tbody id="fmeaTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: CHECKLIST DIGITAL -->
+    <div id="tab-checklist" class="hidden">
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Checklist Digital de Auditoria Zero-Defeito</h2>
+            <div class="card-subtitle">Marque cada item durante a verificação completa do desenho antes da liberação.</div>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn-action" onclick="copyAuditReport()">Copiar Relatório</button>
+            <button class="btn-secondary" onclick="resetChecklist()">Resetar</button>
+          </div>
+        </div>
+
+        <div id="checklistItemsList" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: TABELA DE-PARA BA11 -->
+    <div id="tab-depara" class="hidden">
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Tabela De-Para Norma BA11-OS-TOPS-EL-120033</h2>
+            <div class="card-subtitle">Relação oficial de códigos de componentes, aterramentos e documentos de referência.</div>
+          </div>
+        </div>
+
+        <div class="custom-table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Código No Desenho</th>
+                <th>Título do Componente / Sistema</th>
+                <th>Documento de Referência</th>
+                <th>Especificação de Material</th>
+                <th style="text-align: center;">Torque Marked</th>
+              </tr>
+            </thead>
+            <tbody id="deparaTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT NATIVO (100% VANILLA - ZERO DEPENDÊNCIAS EXTERNAS) -->
+  <script>
+    // BASE DE DADOS INTEGRADA DO MANUSCRITO PDF + NORMA BA11
+    const STAGES_DATA = {
+      'sheet-prep': {
         number: '01',
         title: 'Preparação de Folhas',
-        subtitle: 'Cortes no 3D, Orientação de Texto & Escala',
-        icon: IconLayers,
-        colorBg: 'bg-blue-50 text-blue-600 border-blue-200',
-        colorBadge: 'bg-blue-100 text-blue-700',
-        fmeaItems: [
+        sub: 'Cortes 3D, Orientação & NOL',
+        badgeClass: 'bg-blue-badge',
+        rules: [
           {
             id: 'f1',
             element: 'Identificação de Cortes no 3D',
-            ruleText: 'Linkar cortes na planta e nos vistos com a numeração, letra e folha correspondentes (Ex.: corte A, folha 0003).',
+            ruleText: 'Vincular cortes na planta e nos vistos com a numeração, letra e folha correspondentes (Ex.: Corte A, Folha 0003).',
             pokaYoke: 'Conferência em 3 pontos: Vista em Planta, Vista 3D e Caderno de Desenho.',
-            failureMode: 'Corte sem folha correspondente ou letra trocada.',
-            severity: 8, occurrence: 4, detection: 3
+            failureMode: 'Corte sem indicação da folha de detalhe ou letra trocada.',
+            s: 8, o: 4, d: 3
           },
           {
             id: 'f2',
             element: 'Escala & Orientação de Texto',
             ruleText: 'Verificar escala indicativa na arte. Texto SEMPRE para cima. Elementos na escala do desenho (nem grande, nem pequeno).',
-            pokaYoke: 'Regra de Ouro: Inverter o papel para verificar se algum texto fica de cabeça para baixo.',
+            pokaYoke: 'Regra de Ouro: Teste visual de rotação para verificar textos invertidos no layout.',
             failureMode: 'Caixa de corte desproporcional ou texto de cabeça para baixo no layout final.',
-            severity: 7, occurrence: 5, detection: 2
+            s: 7, o: 5, d: 2
           },
           {
             id: 'f3',
-            element: 'DMS & Employer',
+            element: 'Sincronização DMS & Employer (NOL)',
             ruleText: 'Colocar numeração de acordo com o NOL. Atualizar no layout conforme alteração de página.',
-            pokaYoke: 'Sincronizador NOL: Troca de página exige atualização instantânea da legenda.',
+            pokaYoke: 'Sincronizador NOL: Troca de paginação exige validação imediata da legenda.',
             failureMode: 'Desenho enviado para produção com número NOL da folha anterior.',
-            severity: 8, occurrence: 3, detection: 3
+            s: 8, o: 3, d: 3
           },
           {
             id: 'f4',
-            element: 'Organização da Folha',
-            ruleText: 'Colocar número, nome e título corretos. Deixar paginação e escala para o final (por X). Normas ISO.',
-            pokaYoke: 'Trava de Fechamento: Paginação [X de Y] só é preenchida na etapa de liberação final.',
-            failureMode: 'Erro de contagem total de páginas do projeto.',
-            severity: 6, occurrence: 4, detection: 4
+            element: 'Organização da Folha & Normas ISO',
+            ruleText: 'Colocar número, nome e título corretos. Deixar paginação [X de Y] e escala para o final.',
+            pokaYoke: 'Trava de Fechamento: A paginação final [X de Y] só é preenchida na liberação.',
+            failureMode: 'Erro de contagem do número total de folhas do projeto.',
+            s: 6, o: 4, d: 4
           }
         ]
       },
-      {
-        id: 'drawing-trace',
+      'drawing-trace': {
         number: '02',
         title: 'Traçado de Desenho',
-        subtitle: 'Roteamento de Barramentos Longos & Flag HOLD',
-        icon: IconRuler,
-        colorBg: 'bg-amber-50 text-amber-600 border-amber-200',
-        colorBadge: 'bg-amber-100 text-amber-800',
-        fmeaItems: [
+        sub: 'Barramentos & Suportes',
+        badgeClass: 'bg-amber-badge',
+        rules: [
           {
             id: 'f5',
-            element: 'Seleção de Barramento Longo',
+            element: 'Seleção de Código de Barramento',
             ruleText: 'Quando houver barramento longo USAR E97 (usar E45 quando HVAC). Se não houver, usar 486 com indicação HOLD.',
-            pokaYoke: 'Decisão Automática: Barramento Longo ➔ E97 | HVAC ➔ E45 | Outros ➔ 486 + HOLD.',
-            failureMode: 'Atribuição de código incorreto no ERP/BOM de materiais.',
-            severity: 9, occurrence: 3, detection: 2
-          }
-        ]
-      },
-      {
-        id: 'tables-data',
-        number: '03',
-        title: 'Tabela & Simbologia',
-        subtitle: 'Sequência de Linha e Agrupamento Visual',
-        icon: IconTable,
-        colorBg: 'bg-purple-50 text-purple-600 border-purple-200',
-        colorBadge: 'bg-purple-100 text-purple-800',
-        fmeaItems: [
-          {
-            id: 'f6',
-            element: 'Ordem Rígida da Tabela',
-            ruleText: 'Na tabela seguir sempre a ordem da linha: [Número] ➔ [PN] ➔ [Tipo de Cabo] ➔ [Quantidade].',
-            pokaYoke: 'Grid Padronizado: Colunas bloqueadas contra alteração manual de sequência.',
-            failureMode: 'Inversão entre código de peça (PN) e tipo de cabo na linha de fabricação.',
-            severity: 7, occurrence: 4, detection: 2
+            pokaYoke: 'Decisão Automática: Barramento Longo ➔ E97 | HVAC ➔ E45 | Padrão ➔ 486 + HOLD.',
+            failureMode: 'Código de barramento incorreto atribuído na lista de materiais ERP.',
+            s: 9, o: 3, d: 2
           },
           {
-            id: 'f7',
-            element: 'Organização de Elementos',
-            ruleText: 'Organizar sempre cada elemento gráfico (quadrado, círculo, símbolo do EA, símbolo do LUG).',
-            pokaYoke: 'Agrupador de Símbolos: Garantir alinhamento sem sobreposição de textos.',
-            failureMode: 'Terminal de compressão mal especificado por sobreposição visual.',
-            severity: 6, occurrence: 4, detection: 3
+            id: 'f6',
+            element: 'Espaçamento de Suportes & Emendas',
+            ruleText: 'Espaçamento máximo entre suportes de 900mm. Sobreposição de emenda mínima de 100mm. Furação de parafusos a 60mm.',
+            pokaYoke: 'Gabarito Dimensional: Verificação automática de tolerância mecânica.',
+            failureMode: 'Deformação do barramento por falta de suporte mecânico adequado.',
+            s: 8, o: 3, d: 3
           }
         ]
       },
-      {
-        id: 'tagging-cables',
-        number: '04',
-        title: 'TAGs & Cabeamento',
-        subtitle: 'Hierarquia Inviolável de TAGs & Contagem',
-        icon: IconTag,
-        colorBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-        colorBadge: 'bg-emerald-100 text-emerald-800',
-        fmeaItems: [
+      'tables-data': {
+        number: '03',
+        title: 'Tabela & Simbologia',
+        sub: 'Sequência, LUGs & Termo',
+        badgeClass: 'bg-purple-badge',
+        rules: [
+          {
+            id: 'f7',
+            element: 'Ordem Rígida da Tabela',
+            ruleText: 'Na tabela seguir sempre a ordem da linha: [1. Número] ➔ [2. PN] ➔ [3. Tipo de Cabo] ➔ [4. Quantidade / LUG].',
+            pokaYoke: 'Grid Fixo: Colunas imutáveis para evitar erros de digitação.',
+            failureMode: 'Inversão entre Part Number (PN) e tipo de cabo na fabricação.',
+            s: 7, o: 4, d: 2
+          },
           {
             id: 'f8',
-            element: 'Ordem Prioritária de TAGs',
-            ruleText: 'Ordem de TAG obrigatória: 1- Aterramentos ➔ 2- Jumpers ➔ 3- Derivações ➔ 4- Main cable.',
-            pokaYoke: 'Pilha Numérica de Prioridade (1 a 4). Impossível aplicar Main Cable antes do Aterramento.',
-            failureMode: 'Cabos principais etiquetados sem o devido vinculo ao circuito de proteção.',
-            severity: 9, occurrence: 4, detection: 2
+            element: 'Agrupamento de Símbolos Gráficos',
+            ruleText: 'Organizar sempre cada elemento gráfico (quadrado, círculo, símbolo do EA, símbolo do LUG).',
+            pokaYoke: 'Organizador Gráfico: Símbolos alinhados sem sobreposição de legendas.',
+            failureMode: 'Identificação ilegível do tipo de terminal no desenho.',
+            s: 6, o: 4, d: 3
           },
           {
             id: 'f9',
-            element: 'Contagem de LUGs & Cabos',
-            ruleText: 'Fazer contagem e medição de cabos e LUGs em todos os pontos do desenho.',
-            pokaYoke: 'BOM Checker: Quantidade de LUGs na planta = Quantidade de LUGs na tabela.',
-            failureMode: 'Divergência no kit de montagem (sobra ou falta de terminais LUG).',
-            severity: 8, occurrence: 5, detection: 3
+            element: 'Tubo Termorretrátil & Material do LUG',
+            ruleText: 'Comprimento do tubo termorretrátil L ≥ 3 × D_externo. Inox AISI 316 para exterior / Cobre Estanhado para interior.',
+            pokaYoke: 'Regra da Norma BA11: Isolamento térmico dimensionado no desenho.',
+            failureMode: 'Curto-circuito por isolamento insuficiente do terminal.',
+            s: 8, o: 3, d: 3
           }
         ]
       },
-      {
-        id: 'grounding-busbar',
-        number: '05',
-        title: 'Aterramento & Busbar',
-        subtitle: 'Sistemas INS/TELE e Terminal 697',
-        icon: IconZap,
-        colorBg: 'bg-rose-50 text-rose-600 border-rose-200',
-        colorBadge: 'bg-rose-100 text-rose-800',
-        fmeaItems: [
+      'tagging-cables': {
+        number: '04',
+        title: 'TAGs & Cabeamento',
+        sub: 'Hierarquia 1 a 4 & Destino',
+        badgeClass: 'bg-emerald-badge',
+        rules: [
           {
             id: 'f10',
-            element: 'Aterramento INS / TELE (Terminal 697)',
+            element: 'Ordem Prioritária de TAGs',
+            ruleText: 'Ordem de TAG obrigatória: 1- Aterramentos ➔ 2- Jumpers ➔ 3- Derivações ➔ 4- Main cable.',
+            pokaYoke: 'Pilha de Prioridade (1 a 4): Impossível etiquetar Main Cable antes do Aterramento.',
+            failureMode: 'Falta de rastreabilidade da proteção de aterramento.',
+            s: 9, o: 4, d: 2
+          },
+          {
+            id: 'f11',
+            element: 'Contagem de Cabos & LUGs',
+            ruleText: 'Fazer contagem de cabos e LUGs em todos os pontos do desenho. Identificar equipamento de destino.',
+            pokaYoke: 'BOM Checker: Balanço de quantidade entre o desenho e a lista de peças.',
+            failureMode: 'Divergência na quantidade de terminais no kit de montagem.',
+            s: 8, o: 5, d: 3
+          }
+        ]
+      },
+      'grounding-busbar': {
+        number: '05',
+        title: 'Aterramento INS/TELE & Busbar 697',
+        sub: 'Tabela AZAXX & Torque',
+        badgeClass: 'bg-rose-badge',
+        rules: [
+          {
+            id: 'f12',
+            element: 'Aterramento INS / TELE & Tabela AZAXX',
             ruleText: 'Para terminal 697 a tabela fica AZAXX. Códigos: 654X-02, E54X-02, 609, 610B, E54X-D1/02, 655-D3, E9, E54A-01/02.',
-            pokaYoke: 'Tabela Padrão AZAXX para BUSBAR 697. Validação automática de sufixos de derivação.',
-            failureMode: 'Falha de continuidade de aterramento no painel elétrico de telecomunicações.',
-            severity: 9, occurrence: 3, detection: 3
+            pokaYoke: 'Tabela Padrão AZAXX para BUSBAR 697 com verificação de sufixos de derivação.',
+            failureMode: 'Incompatibilidade de sinal de terra nos instrumentos de medição.',
+            s: 9, o: 3, d: 3
+          },
+          {
+            id: 'f13',
+            element: 'Cores VDE / Amprion & Marcas de Binário',
+            ruleText: 'Verde/Amarelo EXCLUSIVO para PE (Proteção). Preto para aterramento funcional. Carimbo obrigatório: TORQUE MARKED.',
+            pokaYoke: 'Filtro de Cores VDE 0100-510 & Marca Amarela / Vermelha de Aperto de Binário.',
+            failureMode: 'Reprovação na inspeção do cliente final Amprion.',
+            s: 9, o: 2, d: 2
           }
         ]
       }
+    };
+
+    const DE_PARA_DATA = [
+      { code: 'AZAXX', docTitle: 'Tabela Geral de Aterramento INS/TELE - Busbar A', refDoc: 'BA11-OS-TOPS-EL-120033-001', material: 'Cobre Estanhado', torque: 'Sim (Marcado)' },
+      { code: '654X-02', docTitle: 'Cabo de Aterramento Principal (Main Earth)', refDoc: 'BA11-OS-TOPS-EL-120033-003', material: 'Cobre Estanhado / Flexível', torque: 'Sim (Marcado)' },
+      { code: 'E54X-02', docTitle: 'Derivação para Calha de Cabos / Bandejas', refDoc: 'BA11-OS-TOPS-EL-120033-004', material: 'Cobre Estanhado', torque: 'Sim (Marcado)' },
+      { code: 'E54X-D1/02', docTitle: 'Ligação Equipotencial Secundária', refDoc: 'BA11-OS-TOPS-EL-120033-005', material: 'Inox AISI 316 (Exterior)', torque: 'Sim (Marcado)' },
+      { code: '655-D3', docTitle: 'Jumper Flexível de Painéis e Baterias', refDoc: 'BA11-OS-TOPS-EL-120033-006', material: 'Cobre Flexível 6mm²', torque: 'Sim (Marcado)' },
+      { code: 'E97', docTitle: 'Barramento Longo Standard (Plataforma)', refDoc: 'BA11-OS-TOPS-EL-120033-002', material: 'Cobre 30x5mm', torque: 'Sim (Marcado)' },
+      { code: 'E45', docTitle: 'Barramento Longo - Área HVAC', refDoc: 'BA11-OS-TOPS-EL-120033-002', material: 'Cobre 30x5mm Especial', torque: 'Sim (Marcado)' },
+      { code: '486 (HOLD)', docTitle: 'Barramento Convencional (Pendente de Validação)', refDoc: 'Aguardando Aprovação', material: 'A Definir', torque: 'Pendente' }
     ];
 
-    // --- COMPONENTE GUIAS VISUAIS ILUSTRATIVOS ---
-    
-    // GUIA VISUAL ETAPA 1: Corte 3D vs Planta e Direção do Texto
-    function VisualGuideStep1() {
-      const [isUpsideDown, setIsUpsideDown] = useState(false);
-      return (
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
-              <IconEye className="w-4 h-4" /> Guia Visual Interativo: Identificação & Texto
-            </span>
-            <span className="text-[11px] bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded-full">
-              Padrão ISO & Layout
-            </span>
-          </div>
+    // ESTADO
+    let currentTab = 'workflow';
+    let currentStageKey = 'sheet-prep';
+    let checkedState = JSON.parse(localStorage.getItem('quality_mitigacao_state_v4') || '{}');
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Diagrama do Corte no 3D e Planta */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500 block mb-2">1. Vinculação de Corte (Planta ➔ 3D)</span>
-                <div className="relative h-32 bg-slate-100 rounded-lg border border-dashed border-slate-300 flex items-center justify-center p-3 overflow-hidden">
-                  {/* Representação da Vista 3D */}
-                  <div className="w-24 h-20 bg-blue-500/10 border-2 border-blue-500 rounded-md flex flex-col items-center justify-center relative shadow-sm">
-                    <span className="text-[10px] font-bold text-blue-700">MODELO 3D</span>
-                    <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                      CORTE A
-                    </div>
-                  </div>
-                  <div className="mx-3 font-bold text-slate-400">➔</div>
-                  {/* Representação da Folha 0003 */}
-                  <div className="w-24 h-20 bg-emerald-500/10 border-2 border-emerald-500 rounded-md flex flex-col items-center justify-center relative shadow-sm">
-                    <span className="text-[10px] font-bold text-emerald-700">FOLHA 0003</span>
-                    <span className="text-[8px] text-slate-500">Detalhe ISO</span>
-                  </div>
-                </div>
-              </div>
-              <p className="text-[11px] text-slate-600 mt-2 bg-blue-50/60 p-2 rounded border border-blue-100">
-                ✔️ <strong>Regra:</strong> Indicar sempre o nome do corte e o número da folha (Ex.: <code className="bg-white px-1 rounded text-blue-700 font-bold">Corte A, Folha 0003</code>).
-              </p>
-            </div>
+    // ESTADO DOS SIMULADORES
+    let isFlipped = false;
+    let busbarIsLong = true;
+    let busbarIsHvac = false;
+    let cableD = 12;
+    let selectedNode = '697';
 
-            {/* Teste Interativo de Inversão de Texto */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-semibold text-slate-500">2. Orientação de Texto</span>
-                  <button 
-                    onClick={() => setIsUpsideDown(!isUpsideDown)}
-                    className="text-[11px] text-blue-600 hover:underline font-medium"
-                  >
-                    Simular {isUpsideDown ? 'Orientação Correta' : 'Erro de Inversão'}
-                  </button>
-                </div>
+    // TROCA DE ABAS
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
 
-                <div className="h-32 bg-slate-100 rounded-lg border border-slate-200 flex flex-col items-center justify-center relative overflow-hidden transition-all">
-                  <div className={`p-3 bg-white border rounded-lg shadow-sm transition-transform duration-300 ${isUpsideDown ? 'rotate-180 border-rose-300 bg-rose-50' : 'border-emerald-300 bg-emerald-50'}`}>
-                    <span className={`text-xs font-bold ${isUpsideDown ? 'text-rose-600' : 'text-emerald-700'}`}>
-                      TEXTO SEMPRE PARA CIMA
-                    </span>
-                  </div>
-                  {isUpsideDown && (
-                    <span className="absolute bottom-1 text-[10px] bg-rose-600 text-white font-bold px-2 py-0.5 rounded">
-                      ❌ REPROVADO: De cabeça para baixo!
-                    </span>
-                  )}
-                </div>
-              </div>
-              <p className="text-[11px] text-slate-600 mt-2 bg-slate-50 p-2 rounded border border-slate-200">
-                📏 Caixas de corte e textos devem acompanhar a escala do desenho (<strong>nem grande, nem pequeno</strong>).
-              </p>
-            </div>
-          </div>
-        </div>
-      );
+      document.getElementById('tab-workflow').classList.add('hidden');
+      document.getElementById('tab-fmea').classList.add('hidden');
+      document.getElementById('tab-checklist').classList.add('hidden');
+      document.getElementById('tab-depara').classList.add('hidden');
+
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      if (tabId === 'fmea') renderFMEA();
+      if (tabId === 'checklist') renderChecklist();
+      if (tabId === 'depara') renderDePara();
     }
 
-    // GUIA VISUAL ETAPA 2: Roteamento de Barramentos
-    function VisualGuideStep2() {
-      const [isLong, setIsLong] = useState(true);
-      const [isHvac, setIsHvac] = useState(false);
+    // SELEÇÃO DE ETAPA
+    function selectStage(stageKey) {
+      currentStageKey = stageKey;
+      document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-${stageKey}`).classList.add('active');
 
-      let selectedCode = "486 + HOLD";
-      let codeColor = "bg-rose-100 text-rose-700 border-rose-300";
-      
-      if (isLong) {
-        if (isHvac) {
-          selectedCode = "E45 (HVAC)";
-          codeColor = "bg-cyan-100 text-cyan-800 border-cyan-300";
-        } else {
-          selectedCode = "E97 (STANDARD)";
-          codeColor = "bg-amber-100 text-amber-800 border-amber-300";
-        }
+      renderCurrentStage();
+    }
+
+    // RENDERIZAR ETAPA ATIVA
+    function renderCurrentStage() {
+      const data = STAGES_DATA[currentStageKey];
+      document.getElementById('stageHeaderNumber').className = `badge-iso ${data.badgeClass}`;
+      document.getElementById('stageHeaderNumber').innerText = `ETAPA ${data.number}`;
+      document.getElementById('stageHeaderTitle').innerText = data.title;
+      document.getElementById('stageRuleCount').innerText = `${data.rules.length} Regras de Controle`;
+
+      // GUIAS VISUAIS
+      const guideContainer = document.getElementById('visualGuideContainer');
+      if (currentStageKey === 'sheet-prep') {
+        guideContainer.innerHTML = `
+          <div class="visual-guide-box">
+            <div class="visual-guide-header">
+              <span class="visual-guide-title text-blue">🔍 Guia Visual: Identificação de Cortes & Orientação</span>
+              <span class="badge-iso bg-blue-badge">Layout ISO</span>
+            </div>
+            <div class="visual-grid-2">
+              <div class="demo-interactive-card">
+                <span style="font-size: 0.725rem; font-weight: 700; color: #64748b; margin-bottom: 0.5rem; display:block;">1. Vinculação Cruzada (Planta ➔ 3D)</span>
+                <div style="background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; height: 90px;">
+                  <div style="background:#e8f0fe; border:2px solid #1a73e8; border-radius:8px; padding:0.5rem; text-align:center;">
+                    <div style="font-size:0.65rem; font-weight:800; color:#1a73e8;">MODELO 3D</div>
+                    <div style="font-size:0.55rem; background:#1a73e8; color:#fff; padding:1px 4px; border-radius:4px;">CORTE A</div>
+                  </div>
+                  <strong style="color:#94a3b8;">➔</strong>
+                  <div style="background:#d1fae5; border:2px solid #10b981; border-radius:8px; padding:0.5rem; text-align:center;">
+                    <div style="font-size:0.65rem; font-weight:800; color:#047857;">FOLHA 0003</div>
+                    <div style="font-size:0.55rem; color:#047857;">Detalhe ISO</div>
+                  </div>
+                </div>
+                <p style="font-size: 0.7rem; color: #475569; margin-top: 0.5rem; background:#f8fafc; padding:0.4rem; border-radius:8px;">
+                  ✔️ Indicar sempre a letra e a folha (Ex.: <code class="mono text-blue">Corte A, Folha 0003</code>).
+                </p>
+              </div>
+
+              <div class="demo-interactive-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                  <span style="font-size: 0.725rem; font-weight: 700; color: #64748b;">2. Orientação do Texto</span>
+                  <button class="btn-action" style="font-size:0.65rem; padding:0.2rem 0.5rem;" onclick="toggleFlip()">Simular Rotação</button>
+                </div>
+                <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; height: 90px; display:flex; align-items:center; justify-content:center;">
+                  <div id="flipBox" class="rotate-box ${isFlipped ? 'flipped' : ''}">
+                    ${isFlipped ? '❌ TEXTO INVERTIDO' : '✔️ TEXTO SEMPRE PARA CIMA'}
+                  </div>
+                </div>
+                <p style="font-size: 0.7rem; color: #475569; margin-top: 0.5rem; background:#f8fafc; padding:0.4rem; border-radius:8px;">
+                  📏 Símbolos e textos ajustados na escala do desenho (<strong>nem grande, nem pequeno</strong>).
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentStageKey === 'drawing-trace') {
+        guideContainer.innerHTML = `
+          <div class="visual-guide-box">
+            <div class="visual-guide-header">
+              <span class="visual-guide-title text-amber">📐 Decisor de Barramento & Suportes (BA11)</span>
+              <span class="badge-iso bg-amber-badge">Poka-Yoke</span>
+            </div>
+            <div class="visual-grid-3">
+              <div class="demo-interactive-card">
+                <span style="font-size:0.725rem; font-weight:700; color:#475569; margin-bottom:0.4rem; display:block;">Condições do Traçado</span>
+                <label style="font-size:0.75rem; display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                  <input type="checkbox" ${busbarIsLong ? 'checked' : ''} onchange="setBusbarLong(this.checked)" /> É Barramento Longo?
+                </label>
+                <label style="font-size:0.75rem; display:flex; align-items:center; gap:0.4rem; cursor:pointer; margin-top:0.4rem; ${!busbarIsLong ? 'opacity:0.4' : ''}">
+                  <input type="checkbox" ${busbarIsHvac ? 'checked' : ''} ${!busbarIsLong ? 'disabled' : ''} onchange="setBusbarHvac(this.checked)" /> Área HVAC?
+                </label>
+              </div>
+
+              <div class="demo-interactive-card" style="text-align:center;">
+                <span style="font-size:0.65rem; color:#94a3b8; font-weight:700; display:block; margin-bottom:0.3rem;">Tolerância Mecânica BA11</span>
+                <div style="background:#f1f5f9; padding:0.4rem; border-radius:8px; font-size:0.65rem;" class="mono">
+                  <div>Suporte a cada <strong class="text-amber">900mm</strong></div>
+                  <div>Emenda Mínima <strong class="text-emerald">100mm</strong></div>
+                  <div>Parafusos M8 a <strong class="text-blue">60mm</strong></div>
+                </div>
+              </div>
+
+              <div class="demo-interactive-card" style="text-align:center; justify-content:center;">
+                <span style="font-size:0.65rem; color:#94a3b8; font-weight:700;">Código Obrigatório</span>
+                <div style="font-size:0.9rem; font-weight:800; padding:0.4rem; border-radius:8px; margin-top:0.2rem;" class="mono ${getBusbarCode().bg}">
+                  ${getBusbarCode().code}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentStageKey === 'tables-data') {
+        guideContainer.innerHTML = `
+          <div class="visual-guide-box">
+            <div class="visual-guide-header">
+              <span class="visual-guide-title text-purple">📊 Layout da Tabela & Tubo Termorretrátil</span>
+              <span class="badge-iso bg-purple-badge">ISO Standard</span>
+            </div>
+            <div class="visual-grid-2">
+              <div class="custom-table-wrapper">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>1. Número</th>
+                      <th>2. PN</th>
+                      <th>3. Tipo Cabo</th>
+                      <th>4. Qtd/LUG</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="mono">001</td>
+                      <td class="mono">654X-02</td>
+                      <td>Main 16mm²</td>
+                      <td class="text-emerald font-bold">2 LUGs</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="demo-interactive-card">
+                <span style="font-size:0.725rem; font-weight:700; color:#334155; display:block; border-bottom:1px solid #e2e8f0; padding-bottom:0.2rem; margin-bottom:0.4rem;">
+                  Isolamento Termorretrátil (L ≥ 3 × D_ext)
+                </span>
+                <div style="display:flex; justify-between; align-items:center; font-size:0.75rem;">
+                  <span>Diâmetro Cabo (D):</span>
+                  <input type="number" value="${cableD}" onchange="setCableD(this.value)" style="width:60px; text-align:right; border:1px solid #cbd5e1; border-radius:6px; padding:0.2rem;" class="mono" /> mm
+                </div>
+                <div style="background:#f3e8ff; border:1px solid #d8b4fe; border-radius:8px; padding:0.4rem; text-align:center; margin-top:0.4rem;">
+                  <span style="font-size:0.65rem; color:#6b21a8; display:block;">Comprimento Mínimo (L):</span>
+                  <strong class="mono text-purple" style="font-size:0.9rem;">${cableD * 3} mm</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentStageKey === 'tagging-cables') {
+        guideContainer.innerHTML = `
+          <div class="visual-guide-box">
+            <div class="visual-guide-header">
+              <span class="visual-guide-title text-emerald">🏷️ Pilha Hierárquica de TAGs (1 a 4)</span>
+              <span class="badge-iso bg-emerald-badge">Prioridade Fixo</span>
+            </div>
+            <div class="visual-grid-4">
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+                <span style="background:#10b981; color:#fff; width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.75rem;" class="mono">1º</span>
+                <div>
+                  <strong style="font-size:0.75rem; display:block;">Aterramentos</strong>
+                  <span style="font-size:0.65rem; color:#94a3b8;">Proteção PE</span>
+                </div>
+              </div>
+
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+                <span style="background:#6366f1; color:#fff; width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.75rem;" class="mono">2º</span>
+                <div>
+                  <strong style="font-size:0.75rem; display:block;">Jumpers</strong>
+                  <span style="font-size:0.65rem; color:#94a3b8;">Pontes Flexíveis</span>
+                </div>
+              </div>
+
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+                <span style="background:#f59e0b; color:#fff; width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.75rem;" class="mono">3º</span>
+                <div>
+                  <strong style="font-size:0.75rem; display:block;">Derivações</strong>
+                  <span style="font-size:0.65rem; color:#94a3b8;">Bandejas/Calhas</span>
+                </div>
+              </div>
+
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+                <span style="background:#334155; color:#fff; width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.75rem;" class="mono">4º</span>
+                <div>
+                  <strong style="font-size:0.75rem; display:block;">Main Cable</strong>
+                  <span style="font-size:0.65rem; color:#94a3b8;">Cabo Principal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentStageKey === 'grounding-busbar') {
+        const nodes = {
+          '697': { title: 'Busbar Principal 697', desc: 'Barramento central INS/TELE. Exige Tabela AZAXX.', code: 'AZAXX', vde: 'Verde/Amarelo (PE) ou Preto' },
+          'E54X-02': { title: 'Derivação E54X-02', desc: 'Cabo principal para bandejas e calhas de cabos.', code: '654X-02', vde: 'Preto (Aterramento Funcional)' },
+          '610B': { title: 'Ponto Intermediário 610B', desc: 'Ligação equipotencial de estruturas metálicas.', code: 'E54X-D1/02', vde: 'Preto / Inox AISI 316' },
+          '655-D3': { title: 'Terminal 655-D3 (Jumper)', desc: 'Jumper flexível 6mm² para armários e baterias.', code: 'E54A-01/02', vde: 'Preto (VDE 0100-510)' }
+        };
+        const curr = nodes[selectedNode];
+
+        guideContainer.innerHTML = `
+          <div class="visual-guide-box">
+            <div class="visual-guide-header">
+              <span class="visual-guide-title text-rose">⚡ Circuito INS/TELE (Terminal 697) & VDE Amprion</span>
+              <span class="badge-iso bg-rose-badge">Torque Marked</span>
+            </div>
+            <div class="visual-grid-3">
+              <div style="grid-column: span 2; background:#fff; padding:0.75rem; border-radius:12px; border:1px solid #e2e8f0;">
+                <span style="font-size:0.65rem; color:#94a3b8; font-weight:700; display:block; margin-bottom:0.4rem;">Inspecionar Nós do Circuito:</span>
+                <div style="display:flex; gap:0.4rem; flex-wrap:wrap; justify-content:center; background:#f1f5f9; padding:0.6rem; border-radius:10px;">
+                  <button class="btn-secondary ${selectedNode === '697' ? 'active' : ''}" onclick="selectNode('697')">[697] BUSBAR</button>
+                  <span style="color:#cbd5e1; font-weight:800;">➔</span>
+                  <button class="btn-secondary ${selectedNode === 'E54X-02' ? 'active' : ''}" onclick="selectNode('E54X-02')">E54X-02</button>
+                  <span style="color:#cbd5e1; font-weight:800;">➔</span>
+                  <button class="btn-secondary ${selectedNode === '610B' ? 'active' : ''}" onclick="selectNode('610B')">610B</button>
+                  <span style="color:#cbd5e1; font-weight:800;">➔</span>
+                  <button class="btn-secondary ${selectedNode === '655-D3' ? 'active' : ''}" onclick="selectNode('655-D3')">655-D3</button>
+                </div>
+              </div>
+
+              <div class="demo-interactive-card">
+                <span class="badge-iso bg-rose-badge" style="width:fit-content;">${curr.code}</span>
+                <strong style="font-size:0.8rem; margin-top:0.3rem; display:block;">${curr.title}</strong>
+                <p style="font-size:0.675rem; color:#64748b; margin-top:0.2rem;">${curr.desc}</p>
+                <div style="font-size:0.65rem; color:#334155; margin-top:0.4rem; border-top:1px solid #f1f5f9; padding-top:0.3rem;">
+                  Cor VDE: <strong>${curr.vde}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
       }
 
-      return (
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-600 flex items-center gap-1.5">
-              <IconRuler className="w-4 h-4" /> Fluxograma Decisório de Barramentos
-            </span>
-            <span className="text-[11px] bg-amber-100 text-amber-800 font-semibold px-2.5 py-0.5 rounded-full">
-              Poka-Yoke de Traçado
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            {/* Opções de Seleção */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-              <span className="text-xs font-bold text-slate-700 block border-b pb-1">1. Condição da Linha</span>
-              
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700">
-                <input 
-                  type="checkbox" 
-                  checked={isLong} 
-                  onChange={(e) => setIsLong(e.target.checked)}
-                  className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
-                />
-                É Barramento Longo?
-              </label>
-
-              <label className={`flex items-center gap-2 cursor-pointer text-xs font-medium ${!isLong ? 'opacity-40 pointer-events-none' : 'text-slate-700'}`}>
-                <input 
-                  type="checkbox" 
-                  checked={isHvac} 
-                  disabled={!isLong}
-                  onChange={(e) => setIsHvac(e.target.checked)}
-                  className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500"
-                />
-                Aplicação HVAC?
-              </label>
+      // REGRAS POKA-YOKE
+      const rulesGrid = document.getElementById('stageRulesGrid');
+      rulesGrid.innerHTML = data.rules.map(r => {
+        const isChecked = !!checkedState[r.id];
+        const rpn = r.s * r.o * r.d;
+        return `
+          <div class="rule-card ${isChecked ? 'checked' : ''}">
+            <div class="rule-top">
+              <div style="display:flex; align-items:center; gap:0.6rem;">
+                <div class="checkbox-btn" onclick="toggleCheck('${r.id}')">✓</div>
+                <div class="rule-element-title">${r.element}</div>
+              </div>
+              <span class="rpn-tag ${rpn > 100 ? 'high' : ''}">RPN ${rpn}</span>
             </div>
 
-            {/* Ilustração Visual da Linha */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center space-y-2 h-full">
-              <span className="text-[11px] font-semibold text-slate-400">Roteamento Visual</span>
-              <div className="w-full flex items-center justify-center py-3">
-                <div className={`h-2 rounded-full transition-all duration-300 ${isLong ? 'w-full bg-gradient-to-r from-amber-400 via-amber-500 to-indigo-500' : 'w-1/2 bg-slate-300'}`}></div>
-              </div>
-              <span className="text-[10px] text-slate-500">
-                {isLong ? 'Barramento Extenso Mapeado' : 'Barramento Curto Standard'}
-              </span>
+            <div class="rule-box-original">
+              <strong>Regra do Manuscrito / Norma:</strong> ${r.ruleText}
             </div>
 
-            {/* Resultado do Código */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center h-full space-y-2">
-              <span className="text-xs font-bold text-slate-500">Código Obrigatório</span>
-              <div className={`text-sm font-mono font-extrabold px-4 py-2 rounded-lg border shadow-sm ${codeColor}`}>
-                {selectedCode}
-              </div>
-              <span className="text-[10px] text-slate-400">Inserir na Lista de Peças</span>
+            <div class="rule-box-poka">
+              <strong>🛡️ Trava Poka-Yoke:</strong> ${r.pokaYoke}
             </div>
           </div>
-        </div>
-      );
+        `;
+      }).join('');
+
+      updateStatusCounter();
     }
 
-    // GUIA VISUAL ETAPA 3: Estrutura da Tabela
-    function VisualGuideStep3() {
-      return (
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-600 flex items-center gap-1.5">
-              <IconTable className="w-4 h-4" /> Layout Sequencial de Colunas da Tabela
-            </span>
-            <span className="text-[11px] bg-purple-100 text-purple-800 font-semibold px-2.5 py-0.5 rounded-full">
-              Padronização ISO
-            </span>
-          </div>
-
-          {/* Simulador da Tabela */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden text-xs">
-            <div className="grid grid-cols-4 bg-purple-50/80 font-bold text-purple-900 border-b border-purple-100 p-2 text-center">
-              <div>1. Número</div>
-              <div>2. PN (Part Number)</div>
-              <div>3. Tipo de Cabo</div>
-              <div>4. Quantidade / LUG</div>
-            </div>
-            <div className="grid grid-cols-4 p-2 text-center border-b border-slate-100 text-slate-600 font-mono">
-              <div>001</div>
-              <div>PN-654X-02</div>
-              <div>Main Ground 16mm²</div>
-              <div className="flex items-center justify-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> 2 LUGs
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px]">
-            <div className="bg-white p-2 rounded-lg border border-slate-200 flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-slate-700 bg-slate-100 rounded-sm"></div>
-              <span>Símbolo Quadrado</span>
-            </div>
-            <div className="bg-white p-2 rounded-lg border border-slate-200 flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-slate-700 bg-slate-100 rounded-full"></div>
-              <span>Símbolo Círculo</span>
-            </div>
-            <div className="bg-white p-2 rounded-lg border border-slate-200 flex items-center gap-2">
-              <span className="font-bold text-purple-600 bg-purple-50 px-1 rounded">EA</span>
-              <span>Símbolo do EA</span>
-            </div>
-            <div className="bg-white p-2 rounded-lg border border-slate-200 flex items-center gap-2">
-              <span className="font-bold text-emerald-600 bg-emerald-50 px-1 rounded">LUG</span>
-              <span>Símbolo do LUG</span>
-            </div>
-          </div>
-        </div>
-      );
+    // INTERAÇÃO DOS SIMULADORES
+    function toggleFlip() {
+      isFlipped = !isFlipped;
+      renderCurrentStage();
+    }
+    function setBusbarLong(val) {
+      busbarIsLong = val;
+      renderCurrentStage();
+    }
+    function setBusbarHvac(val) {
+      busbarIsHvac = val;
+      renderCurrentStage();
+    }
+    function getBusbarCode() {
+      if (busbarIsLong) {
+        if (busbarIsHvac) return { code: 'E45 (HVAC)', bg: 'bg-purple-badge' };
+        return { code: 'E97 (STANDARD)', bg: 'bg-amber-badge' };
+      }
+      return { code: '486 + HOLD', bg: 'bg-rose-badge' };
+    }
+    function setCableD(val) {
+      cableD = Number(val) || 1;
+      renderCurrentStage();
+    }
+    function selectNode(nodeKey) {
+      selectedNode = nodeKey;
+      renderCurrentStage();
     }
 
-    // GUIA VISUAL ETAPA 4: Hierarquia de Tags
-    function VisualGuideStep4() {
-      return (
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5">
-              <IconTag className="w-4 h-4" /> Pilha Hierárquica de TAGs (Inviolável)
-            </span>
-            <span className="text-[11px] bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-0.5 rounded-full">
-              Sequência 1 a 4
-            </span>
-          </div>
+    // CHECKBOX TOGGLE
+    function toggleCheck(ruleId) {
+      checkedState[ruleId] = !checkedState[ruleId];
+      localStorage.setItem('quality_mitigacao_state_v4', JSON.stringify(checkedState));
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            {[
-              { num: '1', title: 'Aterramentos', color: 'bg-emerald-500 text-white', border: 'border-emerald-600' },
-              { num: '2', title: 'Jumpers', color: 'bg-indigo-500 text-white', border: 'border-indigo-600' },
-              { num: '3', title: 'Derivações', color: 'bg-amber-500 text-white', border: 'border-amber-600' },
-              { num: '4', title: 'Main Cable', color: 'bg-slate-700 text-white', border: 'border-slate-800' }
-            ].map((item, idx) => (
-              <div key={item.num} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-                <span className={`w-8 h-8 rounded-lg ${item.color} font-mono font-bold flex items-center justify-center text-sm shadow-sm`}>
-                  {item.num}º
-                </span>
-                <div>
-                  <strong className="text-xs text-slate-800 block">{item.title}</strong>
-                  <span className="text-[10px] text-slate-400">Prioridade {idx + 1}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
+      if (currentTab === 'workflow') renderCurrentStage();
+      if (currentTab === 'checklist') renderChecklist();
+      updateStatusCounter();
     }
 
-    // GUIA VISUAL ETAPA 5: Diagrama Terminal 697 & Busbar
-    function VisualGuideStep5() {
-      const [activeNode, setActiveNode] = useState('697');
+    // CONTADOR DE STATUS
+    function updateStatusCounter() {
+      let total = 0;
+      let done = 0;
 
-      const nodeDetails = {
-        '697': { title: 'Terminal 697 (Busbar Principal)', desc: 'Ponto central de aterramento. Exige a Tabela AZAXX no desenho.', code: 'AZAXX' },
-        'E54X-02': { title: 'Cabo / Sufixo E54X-02', desc: 'Roteamento principal de conexão ao Busbar de aterramento.', code: '654X-02' },
-        '610B': { title: 'Ponto Intermediário 610B / E54X-D1/02', desc: 'Derivação de aterramento secundário para bandejas e calhas.', code: 'E54X-D1/02' },
-        '655-D3': { title: 'Terminal 655-D3 (Main & Jumpers)', desc: 'Conexão final de jumper de segurança para instrumentos.', code: 'E54A-01/02' }
-      };
+      Object.keys(STAGES_DATA).forEach(key => {
+        const stage = STAGES_DATA[key];
+        let stageComplete = true;
 
-      const current = nodeDetails[activeNode];
+        stage.rules.forEach(r => {
+          total++;
+          if (checkedState[r.id]) done++;
+          else stageComplete = false;
+        });
 
-      return (
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-rose-600 flex items-center gap-1.5">
-              <IconZap className="w-4 h-4" /> Mapa Esquemático Aterramento INS/TELE
-            </span>
-            <span className="text-[11px] bg-rose-100 text-rose-800 font-semibold px-2.5 py-0.5 rounded-full">
-              Terminal 697 & Busbar
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Seletor do Diagrama Esquematizado */}
-            <div className="md:col-span-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-              <span className="text-xs font-semibold text-slate-500 block">Clique nos pontos do circuito para inspecionar:</span>
-              
-              <div className="flex flex-wrap items-center justify-center gap-3 py-4 bg-slate-100 rounded-xl border border-dashed border-slate-300">
-                <button 
-                  onClick={() => setActiveNode('697')}
-                  className={`px-3 py-2 rounded-lg font-mono text-xs font-bold transition-all shadow-sm ${activeNode === '697' ? 'bg-rose-600 text-white ring-2 ring-rose-400' : 'bg-white text-slate-700 border border-slate-300'}`}
-                >
-                  [697] BUSBAR
-                </button>
-                <span className="text-slate-400 font-bold">➔</span>
-                <button 
-                  onClick={() => setActiveNode('E54X-02')}
-                  className={`px-3 py-2 rounded-lg font-mono text-xs font-bold transition-all shadow-sm ${activeNode === 'E54X-02' ? 'bg-rose-600 text-white ring-2 ring-rose-400' : 'bg-white text-slate-700 border border-slate-300'}`}
-                >
-                  E54X-02
-                </button>
-                <span className="text-slate-400 font-bold">➔</span>
-                <button 
-                  onClick={() => setActiveNode('610B')}
-                  className={`px-3 py-2 rounded-lg font-mono text-xs font-bold transition-all shadow-sm ${activeNode === '610B' ? 'bg-rose-600 text-white ring-2 ring-rose-400' : 'bg-white text-slate-700 border border-slate-300'}`}
-                >
-                  610B / Derivação
-                </button>
-                <span className="text-slate-400 font-bold">➔</span>
-                <button 
-                  onClick={() => setActiveNode('655-D3')}
-                  className={`px-3 py-2 rounded-lg font-mono text-xs font-bold transition-all shadow-sm ${activeNode === '655-D3' ? 'bg-rose-600 text-white ring-2 ring-rose-400' : 'bg-white text-slate-700 border border-slate-300'}`}
-                >
-                  655-D3 / Jumper
-                </button>
-              </div>
-            </div>
-
-            {/* Painel de Detalhes do Nó */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
-              <div>
-                <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
-                  REF. MANUSCRITO
-                </span>
-                <h4 className="font-bold text-sm text-slate-800 mt-2">{current.title}</h4>
-                <p className="text-xs text-slate-500 mt-1">{current.desc}</p>
-              </div>
-
-              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
-                <span className="text-[10px] text-slate-400 block">Código na Tabela</span>
-                <code className="text-xs font-bold text-indigo-600">{current.code}</code>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // --- COMPONENTE PRINCIPAL (APP) ---
-    function App() {
-      const [activeTab, setActiveTab] = useState('workflow'); // 'workflow' | 'fmea' | 'checklist'
-      const [selectedStage, setSelectedStage] = useState(STAGES_DATA[0].id);
-      const [searchTerm, setSearchTerm] = useState('');
-      
-      // Estado de Checkbox com persistência LocalStorage
-      const [checkedItems, setCheckedItems] = useState(() => {
-        try {
-          const saved = localStorage.getItem('quality_checklist_state');
-          return saved ? JSON.parse(saved) : {};
-        } catch (e) {
-          return {};
-        }
+        const checkEl = document.getElementById(`check-${key}`);
+        if (checkEl) checkEl.innerText = stageComplete ? '✓' : '';
       });
 
-      useEffect(() => {
-        try {
-          localStorage.setItem('quality_checklist_state', JSON.stringify(checkedItems));
-        } catch (e) {}
-      }, [checkedItems]);
-
-      const allChecklistItems = useMemo(() => {
-        return STAGES_DATA.flatMap(stage => 
-          stage.fmeaItems.map(item => ({
-            ...item,
-            stageId: stage.id,
-            stageTitle: stage.title,
-            stageNumber: stage.number,
-            rpn: item.severity * item.occurrence * item.detection
-          }))
-        );
-      }, []);
-
-      const toggleCheck = (id) => {
-        setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
-      };
-
-      const completedCount = useMemo(() => {
-        return Object.values(checkedItems).filter(Boolean).length;
-      }, [checkedItems]);
-
-      const progressPercentage = Math.round((completedCount / allChecklistItems.length) * 100);
-
-      const currentStageObj = STAGES_DATA.find(s => s.id === selectedStage);
-
-      // Renderizador de Guias Visuais por Etapa
-      const renderVisualGuide = (stageId) => {
-        switch (stageId) {
-          case 'sheet-prep': return <VisualGuideStep1 />;
-          case 'drawing-trace': return <VisualGuideStep2 />;
-          case 'tables-data': return <VisualGuideStep3 />;
-          case 'tagging-cables': return <VisualGuideStep4 />;
-          case 'grounding-busbar': return <VisualGuideStep5 />;
-          default: return null;
-        }
-      };
-
-      return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 pb-16 font-sans">
-          
-          {/* HEADER FIXO - APPLE / GOOGLE PIXEL STYLE */}
-          <header className="glass-nav border-b border-slate-200/80 sticky top-0 z-50">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-              
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
-                  <IconShield className="w-6 h-6 stroke-[2.2]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 uppercase tracking-wider">
-                      Zero-Defect Quality
-                    </span>
-                    <span className="text-[11px] text-slate-400">PDF Workflow Integrado</span>
-                  </div>
-                  <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                    Workflow Visual de Mitigação de Erros
-                  </h1>
-                </div>
-              </div>
-
-              {/* INDICADOR DE CONFORMIDADE */}
-              <div className="flex items-center gap-3">
-                <div className="bg-white border border-slate-200 rounded-2xl px-3.5 py-1.5 shadow-sm text-right">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Progresso da Inspeção</span>
-                  <span className={`text-xs font-bold flex items-center justify-end gap-1 ${progressPercentage === 100 ? 'text-emerald-600' : 'text-blue-600'}`}>
-                    <IconSparkles className="w-3.5 h-3.5" />
-                    {completedCount} de {allChecklistItems.length} Verificados ({progressPercentage}%)
-                  </span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* ABAS DE NAVEGAÇÃO PRINCIPAIS */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 flex space-x-2 pt-2 border-t border-slate-100">
-              {[
-                { id: 'workflow', label: 'Workflow & Guias Visuais', icon: IconLayers },
-                { id: 'fmea', label: 'Matriz FMEA de Riscos', icon: IconAlert },
-                { id: 'checklist', label: 'Checklist de Auditoria', icon: IconCheck }
-              ].map((tab) => {
-                const IconComp = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-                      isActive 
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <IconComp className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-          </header>
-
-          {/* CONTEÚDO */}
-          <main className="max-w-6xl mx-auto px-4 sm:px-6 mt-6">
-            
-            {/* ABA 1: WORKFLOW VISUAL & GUIAS INTERATIVOS */}
-            {activeTab === 'workflow' && (
-              <div className="space-y-6">
-                
-                {/* BARRA DE NÓS DO FLUXO (PIPELINE) */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                  {STAGES_DATA.map((stage) => {
-                    const isSelected = selectedStage === stage.id;
-                    const stageItems = allChecklistItems.filter(i => i.stageId === stage.id);
-                    const isDone = stageItems.length > 0 && stageItems.every(i => checkedItems[i.id]);
-
-                    return (
-                      <button
-                        key={stage.id}
-                        onClick={() => setSelectedStage(stage.id)}
-                        className={`p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between h-28 ${
-                          isSelected 
-                            ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 shadow-lg shadow-blue-500/5' 
-                            : 'bg-white/80 border-slate-200 hover:border-slate-300 hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stage.colorBadge}`}>
-                            {stage.number}
-                          </span>
-                          {isDone ? (
-                            <span className="text-emerald-500 bg-emerald-50 p-1 rounded-full border border-emerald-200">
-                              <IconCheck className="w-3.5 h-3.5" />
-                            </span>
-                          ) : (
-                            <span className="text-slate-300">•</span>
-                          )}
-                        </div>
-
-                        <div>
-                          <h3 className="text-xs font-bold text-slate-800 line-clamp-1">{stage.title}</h3>
-                          <p className="text-[10px] text-slate-400 line-clamp-1">{stage.subtitle}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* DETALHAMENTO DA ETAPA ATIVA */}
-                {currentStageObj && (
-                  <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-6">
-                    
-                    {/* CABEÇALHO DA ETAPA */}
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-3 rounded-2xl border ${currentStageObj.colorBg}`}>
-                          <currentStageObj.icon className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
-                            ETAPA {currentStageObj.number}
-                          </span>
-                          <h2 className="text-lg font-bold text-slate-900">{currentStageObj.title}</h2>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full font-medium">
-                        {currentStageObj.fmeaItems.length} Pontos de Controle
-                      </span>
-                    </div>
-
-                    {/* GUIA VISUAL EXCLUSIVO DA ETAPA */}
-                    {renderVisualGuide(currentStageObj.id)}
-
-                    {/* REGRAS & CONTROLES POKA-YOKE DA ETAPA */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                      {currentStageObj.fmeaItems.map((item) => {
-                        const isChecked = !!checkedItems[item.id];
-                        const rpn = item.severity * item.occurrence * item.detection;
-
-                        return (
-                          <div 
-                            key={item.id}
-                            className={`p-4 rounded-2xl border transition-all ${
-                              isChecked 
-                                ? 'bg-emerald-50/50 border-emerald-200' 
-                                : 'bg-white border-slate-200 hover:border-slate-300'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2.5">
-                                <button
-                                  onClick={() => toggleCheck(item.id)}
-                                  className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
-                                    isChecked 
-                                      ? 'bg-emerald-600 border-emerald-600 text-white' 
-                                      : 'bg-white border-slate-300 hover:border-slate-400 text-transparent'
-                                  }`}
-                                >
-                                  <IconCheck className="w-4 h-4 stroke-[3]" />
-                                </button>
-                                <h4 className="text-sm font-bold text-slate-800">{item.element}</h4>
-                              </div>
-
-                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                                rpn > 100 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'
-                              }`}>
-                                RPN {rpn}
-                              </span>
-                            </div>
-
-                            {/* REGRA MANUSCRITA */}
-                            <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200/60">
-                              <span className="text-[10px] font-bold uppercase text-slate-400 block mb-0.5">Regra do Manuscrito (PDF)</span>
-                              <p className="text-xs text-slate-700 font-medium">{item.ruleText}</p>
-                            </div>
-
-                            {/* POKA YOKE */}
-                            <div className="mt-2.5 flex items-start gap-2 text-xs text-emerald-800 bg-emerald-100/60 p-2.5 rounded-xl border border-emerald-200/50">
-                              <IconShield className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
-                              <div>
-                                <strong className="font-bold block text-emerald-900">Trava Poka-Yoke:</strong>
-                                {item.pokaYoke}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ABA 2: MATRIZ FMEA */}
-            {activeTab === 'fmea' && (
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">Matriz FMEA (Análise de Erros e Falhas)</h2>
-                    <p className="text-xs text-slate-500">Cálculo de RPN = Severidade (S) × Ocorrência (O) × Detecção (D)</p>
-                  </div>
-
-                  <div className="relative w-full sm:w-64">
-                    <IconSearch className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Buscar regra ou falha..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
-                      <tr>
-                        <th className="p-3">Etapa / Elemento</th>
-                        <th className="p-3">Modo de Falha</th>
-                        <th className="p-3 text-center">S</th>
-                        <th className="p-3 text-center">O</th>
-                        <th className="p-3 text-center">D</th>
-                        <th className="p-3 text-center">RPN</th>
-                        <th className="p-3">Trava Poka-Yoke</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {allChecklistItems
-                        .filter(i => i.element.toLowerCase().includes(searchTerm.toLowerCase()) || i.ruleText.toLowerCase().includes(searchTerm.toLowerCase()))
-                        .map((item) => (
-                          <tr key={item.id} className="hover:bg-slate-50/80">
-                            <td className="p-3">
-                              <span className="text-[10px] text-blue-600 font-bold block">ETAPA {item.stageNumber}</span>
-                              <strong className="text-slate-800">{item.element}</strong>
-                            </td>
-                            <td className="p-3 text-slate-600 max-w-xs">{item.failureMode}</td>
-                            <td className="p-3 text-center font-mono">{item.severity}</td>
-                            <td className="p-3 text-center font-mono">{item.occurrence}</td>
-                            <td className="p-3 text-center font-mono">{item.detection}</td>
-                            <td className="p-3 text-center font-mono">
-                              <span className={`px-2 py-0.5 rounded-full font-bold ${item.rpn > 100 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'}`}>
-                                {item.rpn}
-                              </span>
-                            </td>
-                            <td className="p-3 max-w-xs text-emerald-700 font-medium">{item.pokaYoke}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* ABA 3: CHECKLIST DE AUDITORIA */}
-            {activeTab === 'checklist' && (
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">Checklist Digital de Inspeção</h2>
-                    <p className="text-xs text-slate-500">Marque os itens conforme realiza a conferência da folha de desenho.</p>
-                  </div>
-                  <button
-                    onClick={() => setCheckedItems({})}
-                    className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl font-medium transition-colors"
-                  >
-                    <IconRefresh className="w-3.5 h-3.5" /> Resetar
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {allChecklistItems.map((item) => {
-                    const isChecked = !!checkedItems[item.id];
-                    return (
-                      <div 
-                        key={item.id}
-                        onClick={() => toggleCheck(item.id)}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
-                          isChecked ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className={`w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 transition-all ${
-                          isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-300 text-transparent'
-                        }`}>
-                          <IconCheck className="w-4 h-4 stroke-[3]" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-800">{item.element}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">ETAPA {item.stageNumber}</span>
-                          </div>
-                          <p className="text-xs text-slate-600 mt-1">{item.ruleText}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-          </main>
-
-        </div>
-      );
+      const pct = Math.round((done / total) * 100);
+      const counterEl = document.getElementById('statusCounter');
+      counterEl.innerText = `${done} de ${total} (${pct}%)`;
+      if (pct === 100) counterEl.classList.add('complete');
+      else counterEl.classList.remove('complete');
     }
 
-    // Renderizar App React no DOM
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    // RENDER FMEA
+    function renderFMEA() {
+      const query = (document.getElementById('fmeaSearch')?.value || '').toLowerCase();
+      const tbody = document.getElementById('fmeaTableBody');
+      let html = '';
+
+      Object.keys(STAGES_DATA).forEach(key => {
+        const stage = STAGES_DATA[key];
+        stage.rules.forEach(r => {
+          if (r.element.toLowerCase().includes(query) || r.ruleText.toLowerCase().includes(query) || r.pokaYoke.toLowerCase().includes(query)) {
+            const rpn = r.s * r.o * r.d;
+            html += `
+              <tr>
+                <td>
+                  <span class="badge-iso ${stage.badgeClass}">ETAPA ${stage.number}</span>
+                  <div style="font-weight:800; color:#0f172a; margin-top:0.2rem;">${r.element}</div>
+                </td>
+                <td style="color:#e11d48; max-width:220px;">${r.failureMode}</td>
+                <td style="text-align:center;" class="mono">${r.s}</td>
+                <td style="text-align:center;" class="mono">${r.o}</td>
+                <td style="text-align:center;" class="mono">${r.d}</td>
+                <td style="text-align:center;" class="mono">
+                  <span class="rpn-tag ${rpn > 100 ? 'high' : ''}">${rpn}</span>
+                </td>
+                <td style="color:#047857; font-weight:700;">${r.pokaYoke}</td>
+              </tr>
+            `;
+          }
+        });
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // RENDER CHECKLIST
+    function renderChecklist() {
+      const container = document.getElementById('checklistItemsList');
+      let html = '';
+
+      Object.keys(STAGES_DATA).forEach(key => {
+        const stage = STAGES_DATA[key];
+        stage.rules.forEach(r => {
+          const isChecked = !!checkedState[r.id];
+          html += `
+            <div class="rule-card ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${r.id}')" style="cursor:pointer;">
+              <div style="display:flex; align-items:flex-start; gap:0.75rem;">
+                <div class="checkbox-btn" style="margin-top:0.1rem;">✓</div>
+                <div style="flex:1;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="font-size:0.85rem; color:#0f172a;">${r.element}</strong>
+                    <span class="badge-iso ${stage.badgeClass}">ETAPA ${stage.number}</span>
+                  </div>
+                  <p style="font-size:0.75rem; color:#475569; margin-top:0.26rem;">${r.ruleText}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      });
+
+      container.innerHTML = html;
+    }
+
+    // RENDER TABELA DE-PARA
+    function renderDePara() {
+      const tbody = document.getElementById('deparaTableBody');
+      tbody.innerHTML = DE_PARA_DATA.map(row => `
+        <tr>
+          <td class="mono text-blue font-bold">${row.code}</td>
+          <td style="font-weight:700; color:#0f172a;">${row.docTitle}</td>
+          <td class="mono" style="color:#64748b;">${row.refDoc}</td>
+          <td>${row.material}</td>
+          <td style="text-align:center;" class="text-emerald font-bold">${row.torque}</td>
+        </tr>
+      `).join('');
+    }
+
+    // COPIAR RELATÓRIO
+    function copyAuditReport() {
+      let report = `RELATÓRIO DE AUDITORIA DE QUALIDADE (WORKFLOW MITIGAÇÃO DE ERROS)\nData: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+      let total = 0;
+      let done = 0;
+
+      Object.keys(STAGES_DATA).forEach(key => {
+        const stage = STAGES_DATA[key];
+        stage.rules.forEach(r => {
+          total++;
+          const status = checkedState[r.id] ? '[OK]' : '[PENDENTE]';
+          if (checkedState[r.id]) done++;
+          report += `${status} Etapa ${stage.number} - ${r.element}: ${r.ruleText}\n`;
+        });
+      });
+
+      report += `\nTotal: ${done} de ${total} verificados (${Math.round((done/total)*100)}%)\n`;
+
+      navigator.clipboard.writeText(report).then(() => {
+        alert('Relatório copiado para a área de transferência!');
+      }).catch(() => {
+        prompt('Copie o texto do relatório abaixo:', report);
+      });
+    }
+
+    function resetChecklist() {
+      if (confirm('Deseja resetar todas as marcações da auditoria?')) {
+        checkedState = {};
+        localStorage.removeItem('quality_mitigacao_state_v4');
+        renderCurrentStage();
+        if (currentTab === 'checklist') renderChecklist();
+        updateStatusCounter();
+      }
+    }
+
+    // INICIALIZAÇÃO
+    window.onload = function() {
+      renderCurrentStage();
+      updateStatusCounter();
+    };
   </script>
 </body>
 </html>
